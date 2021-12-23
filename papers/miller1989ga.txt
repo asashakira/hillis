@@ -1,0 +1,170 @@
+Designing Neural Neworks using Genetic Algorithms
+
+Geoffrey F. Miller
+Peter M. Todd
+Shailesh U. Hegde
+
+
+Abstract
+We present a genetic algorithm method that evolves neural network architectures for specific tasks.
+Each network architecture is represented as a connection constraint matrix mapped directly into a bit-string genotype.
+Modified standard genetic operators act on populations of these genotypes to produce network architectures with higher fitnesses over successive generations.
+Architecture fitness is assessed by training particular network instantiations and recording ther final performance error.
+Three applications of this method to simple network mapping tasks are discussed.
+
+
+1. Introduction
+A new computational paradigm is gaining popularity throughout diverse fields ranging from psychology and cognitive science to signal processing and pattern recognition.
+This paradigm, parallel distributed processing (PDP), replaces the single powerful processor of the tradition von Neumann computer with a network of simple interconnected processing units.
+The network's computational power emerges from the collective activity of these units operation in parallel (Rumelhart and McClelland, 1986).
+PDP systems are often called neural networks, based on features shared with sets of real biological neurons.
+Central among these similarities are the ability to learn mappings from a set of inputs to a set of outputs based on training examples, and the ability to generalize beyond the particular examples learned.
+These useful abilities have brought a surge of neural network research activity in the past few years.
+New learning algorithms have been developed, mathmatical foundations have become deeper and broader, and network models have been trained and applied to solve difficult problems in a variety of domains.
+But one aspect of current neural networks remains a bottleneck that could seriously impair progress in the comming years if left unaddressed.
+This bottleneck is the problem of network design.
+
+
+1.1 The Problem of Network Design
+The process of developing a neural network model for a particular application typically includes the following four stages.
+First, a researcher selects a problem domain, such as visual pattern recognition or language processing, based on his or her theoretical, empirical, or applied interests.
+Next, a network architecture is designed for learning tasks from the application domain.
+This architecture forms the skeletal structure of the network: the number of units used, their organization into layers or modules, the connections between them, and other structural parameters.
+Third, given a network with this architecture and some chosen task, a gradient descent learning algorithm such as error back-propagation trains the network by converging on appropriate connection weights.
+Finally, the reasearcher evaluates the trained network according to objective performance measures such as ability to solve the specified task, speed of learning, and generalization ability.
+This whole process can be repeated unitl the desired results are obtained.
+
+Although reasonable methods exist for executing the other three stages, the network design stage remains something of a black art.
+Few rigorously established design principles exist, so the researcher must depend on personal experience with previous designs and on the informal heuristics of the neural network reasearch community (e.g. 'the harder the problem, the more hidden units you need').
+To circumvent the problems associated with intuitive network design by humans, this paper presents an automated evolutionary design method based on genetic algorithms.
+
+
+1.2 Reasons for Automatin Network Design
+Designing neural networks is hard for humans.
+Even small networks can behave in ways that defy comprehension; large, multi-layer, nonlinear networks can be downright mystifying.
+Many of the basic principles governing information processing in such networks (such as parallel constraint satisfacation and distributed representation) are hard to understand and even harder to exploit in trying to design useful new network architectures.
+As a result, most neural network research employs only a few standard architecture types, e.g. layered feed-forward designs or simple recurrent schemes.
+Those seeking radically new architectures cast off into uncharted darkness.
+
+Standard engineering design techniques founder on nerual networks.
+The complex distributed interaction among network units usually makes even the divivde-and-conquer technique of modular design inapplicable.
+Further-more, this complexity seems to preclude concoting direct analytic design methods.
+
+The prospects get even dimmer.
+Even if we find a design sufficient for a particular task, how can we be certain that we didn't miss a much-preferable solution?
+How can we optimize network designs given complex combinations of performance criteria, such as learning speed, compactness, generalization ability, and noise-resistance?
+And how can we determine the proper design modifications required to effect some  desired change in network function?
+
+At present, none of these questions have principled answers.
+The only way to negotiate these dilemmas has been to throw large amounts of human time and effor at them.
+As network applications continue to grow in number, size, and complexity, this human-engineering approach must begin to break down.
+The problem of network design requires a more efficient, automated solution.
+
+
+1.3 Reasons for Using Genetic Search
+The problem of network design comes down to searching for an architecture which performs best on some specified task according to some explicit performance criteria.
+This process in turn can be viewed as searching the surface defined by levels of trained network performance above the space of possible neural network architectures.
+Since the number of possible units and connections is unbounded, the surface is inifinitely large.
+Since changes in the number or units or connections must be discrete, and can have a discontinuous effect on the network's performance, the surface is undifferentiable.
+The mapping from network design to network performance after learning is indirect, strongly epistatic, and dependent on initial conditions (e.g. random starting weights), so the surface is complex and noisy.
+Structurally similar networks can show very different information processing capabilities, so the surface is deceptive; conversely, structurally dissimilar networks can show very similar capabilities, so the surface is multimodal.
+We seek an automated method for searching this vast, undifferentiable, epistatic, complex, noisy, deceptive, multimodal surface.
+
+Enumerative search methods are sure to bog down in the combinatorially explosive space of network architectures.
+Random search methods are no better than enumerative methods in the long run, so are equally unlikely to find useful designs.
+Gradient descent search methods will also fail because they require a differentiable surface with well-defined slopes, and because they are poor at searching complex, deceptive surfaces with many local minima.
+Heuristic knowledge-guided search by a human designer is, for reasons discussed earlier, likely to be inefficient, misdirected, slow, and costly.
+
+Holland's (1975) schema theorem indicated the general utility of genetic search for large, complex, deceptive problem spaces. Thus, in contrast to the above search techniques, genetic algorithms might allow fast, robust evolution of genotypes specifying useful network architectures.
+Therefore, we propose using genetic algorithms as the appropriate evolutionary search technique to automate neural network design.
+
+
+1.4 Previous Evolutionary Approches
+Evolutionary design of cognitive systems has had a long and sporadic history.
+One early method called evolutionary programming (Fogel, Owns, and Walsh, 1966) attempted to evolve finite state machines that would predict the next state of a world given previously witnessed states, using a mutation operator yielding a nonregressive random walk search.
+More recently, another mutational approach has been applied to individual systems learning in simple environments (Dress, 1987).
+Mutation and fitness-based reproduction in competing populations of automata have also been explored (Bergman and Kerszberg, 1987).
+
+Genetic algorithms have been applied to neural networks recently in two main ways.
+First, there have been attempts to use genetic search instead of learning to find apporopriate connection weights in fixed architectures.
+For example, Miller (1988), Whitely and Hanson (1989), and Montana and Davis (1989) compared genetic search to gradient-descent learning for particular network designs and problem domains, but the reults have been ambiguous.
+Alternatively, genetic algorithms have been used to find network architectures themselves, which are then trained and evaluated using some learning procedure.
+Guha, Harp, and Samad (1988; also these proceedings) used an architecture representation based on groups of units with probabilistic projections between them.
+Todd (1988) introduced the approach described here.
+
+
+2 The Genetic Algorithm: Overview
+Our method of automating neural network architecture design combines two adaptive processes: genetic search through the network architecture space, and backpropagation learning in individual networks to evaluate the selected architectures.
+Thus, in our method, as in real biological systems, cycles of learning in individuals are nested within cycles of evolution in populations.
+Each learning cycle presents an individual neural network--an instantiation of a particular network architecture--with the set of input-output pairs defining the task.
+The backpropagation learning algorithm then compares the network's actual outputs with the desired outputs, and modifies the network's connection weights so that it performs the desired input/output mapping task more accurately.
+Each evolution cycle processes one population of network designs according to their associated fitness values (computed during the learning cycles) to yield an offspring population of more highly adapted network designs.
+
+
+2.1 Network Representation Scheme
+Different network representation stratigies can be categorized according to their degree of developmental specification: the specificity of the mapping from genotype to phenotype.
+Weak specification representation schemes use relatively abstract genetic 'blueprints' that must be translated through some 'developmental machinery' to yield a network phenotype.
+Such schemes may be good at capturing the architectural regularities of large networks rather efficiently.
+However, they necessarily involveeither severeconstraints on the network search space, or stochastic specification of individual connections.
+For example, a weak specification scheme could represent whole network layers in single genes, facilitating the recombination and evaluation of large, highly regular networks, but precluding detailed connection design.
+
+Strong specification schemes, which interpret genes more directly as individual connections, are good at capturing the connectivity patterns within smaller networks very precisely and deterministically.
+Such a scheme could facilitate the rapid evolution of finely optimized, compact architectures.
+A variety of moderate specification schemes are also possible.
+
+We chose a strong specification sheme to gain greater resistance to human deisign biases for crisply articulated network layers, localist representations, and easily interpretable processing strategies, all of which can creep into weak specification schemes.
+Astrong specification scheme may facilitate the rapid generation and optimizationi of tightly pruned, interesting designs that no one has hit upon before.
+We hope that the inspection of such streamlined designs will hone our intuitions about what weak specification schemes might work well for larger network designs.
+
+In our particular strong specification scheme, werepresent the architecture of a network of N units by a connectivity constraint matrix, C, of dimension N*(N+1).
+The first N columns of matrix C specify the constraints on the connections between the N units, while the infal (N+1) column contains the constraints for the threshold biases of each unity.
+(A bias can be thought of as a connection to an extra unit which is always "on" witha value of 1.0.)
+
+Each entry C[i,j] in the matrix C is a member of the connectivity constraint set, S, and indicates the nature of the constraint on the connection from unity j to unit i(or on unity i's bias if j = N + 1).
+Thus, column i of C represents the constraints on the fan-out of connections from unit i.
+Similarly row j represents the constraints on the fan-in of connections to unit j.
+
+The elements in S specify different types of connection constraints: for instance, connection weights could be fixed at some constant numeric value (indicated by a spedific value entered in C), learnable to any value (indicated by an L), learnable but restricted to positive values (L+), or learnable but restricted to negative values (L-).
+In our current implementation, S has only two elements: 0 (fixed at zero: no connection) and L (learnable).
+An example of a constraint matrix C for a network with 5 units (with 2 input units and a single output unit) is shown in Figure 1, along with the actual corresponding architecture.
+
+We convert the network architectures, specified here in connection constraint matrix form, to a bit-string genotype as shown in Figure 1.
+Since the constraint set S has been restricted for now to only two values (0 and L), each entry in C is coded by a single bit.
+Successive rows in C are then concatenated to form a bit-string of length N*(N+1), which enters the genotype population to be processed by the genetic operators.
+
+
+2.2 Genetic Operators
+In our current implementation the crossover operator selects a random row number i from 1 to N and swaps all the entries in that row of C between two parents.
+We use this form of crossover because it is easy to implement in the bit-string genotype, and because each fow of C specifies a functional building block composed of a single unit.
+Each such building block incorporates both the unit's bias and its fan-in connections (i.e. its 'receptive field'), thereby specifying all the information that unit receives, and thus what sort of function it can compute.
+
+We are currently exploring other forms of crossover, such as swapping multiple rows, single or multiple columns, croww-shaped regions, or rectangular submatrices of C.
+The main goal is to develop crossover operators which work with our strong specification scheme to swap functionally cohesive portions of network structure.
+Note that our specification scheme ensures that all of these crowwover operators are well-defined, always producing valid new network architectures.
+This eliminates the extra offspring-checking procedures required by some weak specification schemes.
+
+Our standard mutation operator goes through each entry in C and randomly chooses a new constraint (0 or L) with some (low) specified probability.
+Note that any given matrix C can be transformed to any other C by a series of mutations.
+Thus, mutation alone suffices to explore the space of C matrices, ensuring that our genetic search can cover the entire N-unit network architecture space.
+
+Finally, our system also uses fitness-proportionate reporoduction, includeing Grefenstett's (1987) fitness scaling routine, based on the fitness evaluation procedure described next.
+
+
+2.3 Fitness Evaluation
+Performance measures for evaluating the fitness of alternate network architectures should be chosen carefully to reflect the design criteria judged important for a given network application.
+Our major criterion has been ability to successfully learn the input-output mappings specified by each task.
+A more complex weighted fitness function could include further criteria, such as generalization ability or number of connections used in the network.
+
+Our current method for evaluating a particular architecture's fitness proceeds as follows.
+First, a particular instantiation of the architecture is created with learnable connections where the matrix C has an entry L, and no connections where the entry is 0.
+Learnable connections are initialized with small random weights.
+(We currently ignore any connections to input units, and any feedback connections specified in the genotype, since includeing these would complicate the learning process considerably.
+Thus for now we restrict ourselved to feedforward networks.)
+
+This initial network instantiation is then trained for a certain number of epochs (cycles through all the training pairs for the current task) using the back-propagation learning rule.
+The total sum squared error (TSSE) of each network's performance at the last epoch ultimately determines the network's fitness.
+Since low TSSEs correspond to better learning of the task at hand, raw fitness is computed by subtracting the actual TSSE from a constant TSSE representing chance performance on the given task.
+
+
+3 Empirical Method
+We merged Grefenstettes (1987) genetic algorithms system, GENESIS 4.5, with Rumelhart and Mc
