@@ -135,7 +135,7 @@ public:
       // fitness = max(fitness, (float)correct / input_size);
       fitness += correct;
     }
-    return fitness
+    return fitness;
   }
 
   SortingNetwork Crossover(SortingNetwork const &b, int cut) {
@@ -201,26 +201,29 @@ public:
     mutation_rate = mutation;
     compare_size = comparesize;
     // making population
-    population.resize(height);
+    population.assign(height, vector<SortingNetwork>(width));
     for (int i = 0; i < height; i++) {
-      population[i].resize(width);
       for (int j = 0; j < width; j++) {
         population[i][j] = SortingNetwork(comparesize, inputsize);
       }
     }
+    // init use
+    use.assign(height, vector<bool>(width));
   }
 
   void Evaluate() {
     map<float,pair<int,int>> mp;
     // evaluate fitness of each network
-    for (int i = 0; i < height; i++)
+    for (int i = 0; i < height; i++) {
       for (int j = 0; j < width; j++) {
         auto fitness = population[i][j].EvaluateFitness();
         mp[fitness] = make_pair(i, j);
       }
+    }
     // use top 50% for crossover
-    for (auto it = mp.rbegin(); it != mp.rend(); it++) {
-      auto [i, j] = mp->second;
+    int count = 0;
+    for (auto it = mp.rbegin(); count < population_size / 2; it++, count++) {
+      auto [i, j] = it->second;
       use[i][j] = true;
     }
   }
