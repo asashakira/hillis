@@ -2,6 +2,12 @@
 using namespace std;
 
 void milkshake() {
+  map<int,int> mp;
+  for (int i = 0; i < 5; i++) {
+    mp[i] = i*i;
+  }
+  for (auto it = mp.rbegin(); it != mp.rend(); it++)
+    cout << it->first << '\n';
 }
 
 signed main() {
