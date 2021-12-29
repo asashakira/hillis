@@ -53,6 +53,7 @@ private:
   vector<pair<int,int>> c1, c2, compares;
   float fitness = 0;
   int input_size;
+  int compare_size;
 
   void Merge() {
     compares.clear();
@@ -69,6 +70,7 @@ public:
   SortingNetwork() {}
   SortingNetwork(int size, int inputsize) : c1(size), c2(size) {
     input_size = inputsize;
+    compare_size = size;
 
     if (inputsize == 16) {
       int j = 0;
@@ -85,10 +87,6 @@ public:
 
       // create random network
       for (int i = 32; i < size; i++) {
-        // c1[i].first = random(0, inputsize);
-        // c1[i].second = random(0, inputsize);
-        // c2[i].first = random(0, inputsize);
-        // c2[i].second = random(0, inputsize);
         c1[i].first = fastrng() % inputsize;
         c1[i].second = fastrng() % inputsize;
         c2[i].first = fastrng() % inputsize;
@@ -105,7 +103,7 @@ public:
   }
   SortingNetwork(vector<pair<int,int>> const &c) { compares = c; }
 
-  int EvaluateFitness(vector<pair<vector<int>,int>> const &tests) {
+  int EvaluateFitness(vector<pair<vector<int>,int>> &tests) {
     fitness = 0;
     Merge();
     for (auto [v, zeros] : tests) {
@@ -135,18 +133,13 @@ public:
     return fitness /= tests.size();
   }
 
-  SortingNetwork Crossover(SortingNetwork const &b) {
-    SortingNetwork new_network(c1.size(), input_size);
+  void Crossover(SortingNetwork &b) {
     int crossover_point = fastrng() % input_size;
     for (int i = 0; i < crossover_point; i++) {
-      new_network.c1[i] = c1[i];
-      new_network.c2[i] = c2[i];
+      swap(c1[i], b.c1[i]);
+      swap(c2[i], b.c2[i]);
     }
-    for (int i = crossover_point; i < (int)c1.size(); i++) {
-      new_network.c1[i] = b.c1[i];
-      new_network.c2[i] = b.c2[i];
-    }
-    return new_network;
+    swap(c2, b.c2);
   }
 
   void Mutate(int mutation_rate) {
@@ -154,15 +147,9 @@ public:
       int flip = 1;
       for (int i = 0; i < 8; i++) {
         int r = fastrng() % mutation_rate;
-        if (!r) {
-          if (i < 4) {
-            a ^= flip;
-          } else {
-            if (flip > 8) flip >>= i;
-            b ^= flip;
-          }
-        }
+        if (!r) (i < 4 ? a : b) ^= flip;
         flip <<= 1;
+        if (flip > 8) flip = 1;
       }
     }
   }
@@ -186,7 +173,6 @@ class GeneticAlgorithm {
 private:
   vector<vector<SortingNetwork>> population;
   vector<pair<vector<int>,int>> tests;
-  vector<vector<bool>> use;
   int population_size;
   int height, width;
   int crossover_rate;
@@ -211,79 +197,58 @@ public:
       }
     }
     // making test cases
-    tests.resize(testsize);
     vector<pair<vector<int>,int>> v(1 << input_size);
     for (int bit = 0; bit < (1 << input_size); bit++) {
       vector<int> s(input_size);
       int zero = 0;
       for (int i = 0; i < input_size; i++) {
-        if (bit & 1<<i) {
-          s[i] = 1;
-        } else {
-          zero++;
-        }
+        s[i] = bit & 1<<i ? 1 : 0;
+        zero += s[i] == 0;
       }
       v[bit] = {s, zero};
     }
-    // shuffle
-    for (int i = 0; i < (int)v.size(); i++)
-      swap(v[i], v[fastrng() % (int)v.size()]);
-    // get  random testcases
-    for (int i = 0; i < testsize; i++)
-      tests[i] = v[i];
+    tests = v;
   }
 
   void Evaluate() {
+    vector<pair<vector<int>,int>> t(test_size); // tests to evaluate
+    for (int i = 0; i < test_size; i++)
+      t[i] = tests[fastrng() % (int)tests.size()];
+    // evaluate fitness of each network
     vector<pair<float,pair<int,int>>> v;
     for (int i = 0; i < height; i++) {
-    // evaluate fitness of each network
       for (int j = 0; j < width; j++) {
-        auto fitness = population[i][j].EvaluateFitness(tests);
+        auto fitness = population[i][j].EvaluateFitness(t);
         v.push_back({fitness, {i, j}});
       }
     }
-    sort(v.rbegin(), v.rend());
-    // use top 50% for crossover
-    int count = 0;
-    use.assign(height, vector<bool>(width));
-    for (int idx = 0; idx < (int)v.size() and count < crossover_rate; idx++, count++) {
+    sort(v.begin(), v.end());
+    // cull bottom 50%
+    for (int idx = 0; idx < (int)v.size()/2; idx++) {
       auto [i, j] = v[idx].second;
-      use[i][j] = true;
+      auto [ni, nj] = v[v.size()-1 - idx].second;
+      population[ni][nj] = population[i][j];
     }
   }
 
-  pair<int,int> Selection(vector<vector<SortingNetwork>> &prev_population, int si, int sj) {
-    pair<int,int> ret{si, sj};
-    int di[] = {1, 0, -1, 0, 1, 1, -1, -1};
-    int dj[] = {0, -1, 0, 1, 1, -1, 1, -1};
-    for (int k = 1; k < height; k++) {
-      map<float,pair<int,int>> mp;
-      for (int d = 0; d < 8; d++) {
-        int ni = (si + k*di[d] + height) % height;
-        int nj = (sj + k*dj[d] + width) % width;
-        if (!use[ni][nj]) continue;
-        if (fastrng()%2) continue;
-        mp[prev_population[ni][nj].Fitness()] = {ni, nj};
-      }
-      if (mp.size() == 0) continue;
-      ret = mp.rbegin()->second;
-      break;
-    }
-    return ret;
-  }
-
-  void Crossover() {
-    auto prev_population = population;
-    for (int i = 0; i < height; i++) {
-      for (int j = 0; j < width; j++) {
-        // if (use[i][j]) continue;
-        auto [ni, nj] = Selection(prev_population, i, j);
-        population[i][j] = population[i][j].Crossover(prev_population[ni][nj]);
+  void Selection() {
+    const int di[] = {1, 0, -1, 0};
+    const int dj[] = {0, 1, 0, -1};
+    const int max_iteration = 10;
+    for (int it = 0; it < max_iteration; it++) {
+      int d = fastrng() % 4;
+      for (int i = 0; i < height; di[d] ? i+=2 : i++) {
+        for (int j = 0; j < width; dj[d] ? j+=2 : j++) {
+          int ni = (i+di[d]+height) % height;
+          int nj = (j+dj[d]+width) % width;
+          if (it == max_iteration-1) {
+            population[i][j].Crossover(population[ni][nj]);
+          } else if (fastrng() % 2) {
+            swap(population[i][j], population[ni][nj]);
+          }
+        }
       }
     }
-  }
-
-  void Mutation() {
     for (auto &networks : population)
       for (auto &network : networks)
         network.Mutate(mutation_rate);
@@ -312,6 +277,13 @@ public:
       }
     }
   }
+  void PrintPopulation() {
+    for (auto &p : population) {
+      for (auto &x : p)
+        cout << x.Fitness() << ' ';
+      cout << '\n';
+    }
+  }
 };
 
 void Test(SortingNetwork &sn, int n) {
@@ -332,25 +304,27 @@ void Test(SortingNetwork &sn, int n) {
 
 signed main() {
   // const int popsize = 65536; // must be rootable
-  const int popsize = 10000; // must be rootable
+  const int popsize = 256; // must be rootable
   const int crossover = popsize / 2;
   const int mutation = 1000;
   const int inputsize = 16;
   const int comparesize = 60;
-  const int testsize = 1000;
+  const int testsize = 100;
   const int max_generation = 1;
 
   GeneticAlgorithm ga(popsize, crossover, mutation, inputsize, comparesize, testsize);
   ga.Evaluate();
-  for (int gen = 0; gen < max_generation; gen++) {
-    cout << "gen " << gen+1 << " : ";
-    cout << ga.GetBestNetwork().Fitness() << '\n';
-    ga.Crossover();
-    ga.Mutation();
+  for (int gen = 1; gen <= max_generation; gen++) {
+    if (gen % 10 == 0) {
+      cout << "gen " << gen << " : ";
+      cout << ga.GetBestNetwork().Fitness() << '\n';
+    }
+    ga.Selection();
     ga.Evaluate();
   }
   auto sn = ga.GetBestNetwork();
   // sn.Print(); cout << '\n';
+  ga.PrintPopulation();
   Test(sn, inputsize);
   cout << sn.Fitness() << '\n';
 }
