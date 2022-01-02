@@ -12,6 +12,7 @@ g++ -std=gnu++17 sol.cpp -o a
 #include <algorithm>
 #include <math.h>
 #include <random>
+#include <thread>
 
 using namespace std;
 
@@ -25,7 +26,8 @@ T random(T from, T to) {
 }
 
 // Marsaglia's xorshf96
-static unsigned long rx=123456789, ry=362436069, rz=521288629;
+// static unsigned long rx=123456789, ry=362436069, rz=521288629;
+static unsigned long rx=random(0, 123456789), ry=random(0, 362436069), rz=random(0, 521288629);
 unsigned long fastrng(void) {
   unsigned long rt;
   rx ^= rx << 16;
@@ -36,16 +38,6 @@ unsigned long fastrng(void) {
   ry = rz;
   rz = rt ^ rx ^ ry;
   return rz;
-}
-
-template<typename T>
-void print2d(vector<vector<T>> v) {
-  for (int i = 0; i < (int)v.size(); i++) {
-    for (int j = 0; j < (int)v[i].size(); j++) {
-      cout << fixed << setprecision(5) << v[i][j] << ' ';
-    }
-    cout << '\n';
-  }
 }
 
 class SortingNetwork {
@@ -71,7 +63,6 @@ public:
   SortingNetwork(int size, int inputsize) : c1(size), c2(size) {
     input_size = inputsize;
     compare_size = size;
-
     if (inputsize == 16) {
       int j = 0;
       c1[j++] = {0, 1}; c1[j++] = {2, 3}; c1[j++] = {4, 5}; c1[j++] = {6, 7};
@@ -91,6 +82,10 @@ public:
         c1[i].second = fastrng() % inputsize;
         c2[i].first = fastrng() % inputsize;
         c2[i].second = fastrng() % inputsize;
+        // c1[i].first = random(0, inputsize);
+        // c1[i].second = random(0, inputsize);
+        // c2[i].first = random(0, inputsize);
+        // c2[i].second = random(0, inputsize);
       }
     } else {
       for (int i = 0; i < size; i++) {
@@ -103,7 +98,7 @@ public:
   }
   SortingNetwork(vector<pair<int,int>> const &c) { compares = c; }
 
-  int EvaluateFitness(vector<pair<vector<int>,int>> &tests) {
+  void EvaluateFitness(vector<pair<vector<int>,int>> &tests) {
     fitness = 0;
     Merge();
     for (auto [v, zeros] : tests) {
@@ -113,33 +108,31 @@ public:
         if (v[a] > v[b]) swap(v[a], v[b]);
       }
       // calculating fitness
-      bool ok = true;
+      int ok = 1;
       for (auto x : v) {
         if (zeros) {
-          if (x == 1) {
-            ok = false;
-            break;
-          }
+          // fitness += x == 0;
+          if (x != 0)
+            ok = 0;
           zeros--;
         } else {
-          if (x == 0) {
-            ok = false;
-            break;
-          }
+          // fitness += x == 1;
+          if (x != 1)
+            ok = 0;
         }
       }
       fitness += ok;
     }
-    return fitness /= tests.size();
+    fitness /= tests.size();
   }
 
   void Crossover(SortingNetwork &b) {
     int crossover_point = fastrng() % input_size;
     for (int i = 0; i < crossover_point; i++) {
-      swap(c1[i], b.c1[i]);
-      swap(c2[i], b.c2[i]);
+      c1[i] = b.c1[i];
+      c2[i] = b.c2[i];
     }
-    swap(c2, b.c2);
+    c2 = b.c2;
   }
 
   void Mutate(int mutation_rate) {
@@ -215,38 +208,52 @@ public:
     for (int i = 0; i < test_size; i++)
       t[i] = tests[fastrng() % (int)tests.size()];
     // evaluate fitness of each network
-    vector<pair<float,pair<int,int>>> v;
+    vector<pair<float,pair<int,int>>> v(population_size);
+    vector<thread> threads;
     for (int i = 0; i < height; i++) {
       for (int j = 0; j < width; j++) {
-        auto fitness = population[i][j].EvaluateFitness(t);
-        v.push_back({fitness, {i, j}});
+        threads.emplace_back(&SortingNetwork::EvaluateFitness, &population[i][j], ref(t));
+        // population[i][j].EvaluateFitness(t);
       }
     }
+    for (auto &t : threads) t.join();
+    for (int i = 0; i < height; i++)
+      for (int j = 0; j < width; j++)
+        v[i] = {population[i][j].Fitness(), {i, j}};
     sort(v.begin(), v.end());
     // cull bottom 50%
-    for (int idx = 0; idx < (int)v.size()/2; idx++) {
+    for (int idx = 0; idx < population_size/2; idx++) {
       auto [i, j] = v[idx].second;
-      auto [ni, nj] = v[v.size()-1 - idx].second;
-      population[ni][nj] = population[i][j];
+      auto [ni, nj] = v[population_size-1 - idx].second;
+      population[i][j] = population[ni][nj];
     }
   }
 
   void Selection() {
     const int di[] = {1, 0, -1, 0};
     const int dj[] = {0, 1, 0, -1};
-    const int max_iteration = 10;
-    for (int it = 0; it < max_iteration; it++) {
-      int d = fastrng() % 4;
-      for (int i = 0; i < height; di[d] ? i+=2 : i++) {
-        for (int j = 0; j < width; dj[d] ? j+=2 : j++) {
-          int ni = (i+di[d]+height) % height;
-          int nj = (j+dj[d]+width) % width;
-          if (it == max_iteration-1) {
-            population[i][j].Crossover(population[ni][nj]);
-          } else if (fastrng() % 2) {
-            swap(population[i][j], population[ni][nj]);
-          }
+    int d = fastrng() % 4;
+    for (int i = 0; i < height; di[d] ? i+=2 : i++) {
+      for (int j = 0; j < width; dj[d] ? j+=2 : j++) {
+        int ni = (i+di[d]+height) % height;
+        int nj = (j+dj[d]+width) % width;
+        if (population[i][j].Fitness() < population[ni][nj].Fitness())
+          swap(population[i][j], population[ni][nj]);
+        population[ni][nj] = population[i][j];
+      }
+    }
+    for (int i = 0; i < height; i++) {
+      for (int j = 0; j < width; j++) {
+        int ni = i, nj = j;
+        int k = 1;
+        while (true) {
+          if (fastrng() % 2) break;
+          d = fastrng() % 4;
+          ni = (i+k*di[d]+k*height) % height;
+          nj = (j+k*dj[d]+k*width) % width;
+          k++;
         }
+        population[i][j].Crossover(population[ni][nj]);
       }
     }
     for (auto &networks : population)
@@ -304,13 +311,13 @@ void Test(SortingNetwork &sn, int n) {
 
 signed main() {
   // const int popsize = 65536; // must be rootable
-  const int popsize = 256; // must be rootable
+  const int popsize = 10000; // must be rootable
   const int crossover = popsize / 2;
   const int mutation = 1000;
   const int inputsize = 16;
   const int comparesize = 60;
-  const int testsize = 100;
-  const int max_generation = 1;
+  const int testsize = 1000;
+  const int max_generation = 5000;
 
   GeneticAlgorithm ga(popsize, crossover, mutation, inputsize, comparesize, testsize);
   ga.Evaluate();
@@ -322,9 +329,9 @@ signed main() {
     ga.Selection();
     ga.Evaluate();
   }
+  // ga.PrintPopulation();
   auto sn = ga.GetBestNetwork();
   // sn.Print(); cout << '\n';
-  ga.PrintPopulation();
   Test(sn, inputsize);
   cout << sn.Fitness() << '\n';
 }
