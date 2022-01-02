@@ -1,5 +1,6 @@
 
 /*
+hillis1
 sol.cpp
 Akira Itai
 g++ -std=gnu++17 sol.cpp -o a
@@ -316,8 +317,8 @@ signed main() {
   const int mutation = 1000;
   const int inputsize = 16;
   const int comparesize = 60;
-  const int testsize = 1000;
-  const int max_generation = 5000;
+  const int testsize = 100;
+  const int max_generation = 50;
 
   GeneticAlgorithm ga(popsize, crossover, mutation, inputsize, comparesize, testsize);
   ga.Evaluate();
