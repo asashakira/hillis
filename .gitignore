@@ -1,6 +1,6 @@
 a
+*.o
 .python-versions
 .ipynb_checkpoints
 independent-study2021/
 seminar2021/
-test.cpp
