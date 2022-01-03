@@ -1,5 +1,6 @@
 #include "SortingNetwork.h"
 #include "Random.h"
+
 using namespace std;
 
 void SortingNetwork::Merge() {

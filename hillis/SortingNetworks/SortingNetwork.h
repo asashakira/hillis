@@ -1,5 +1,5 @@
 #ifndef SORTINGNETWORK_H
-#define SOTRINGNETWORK_H
+#define SORTINGNETWORK_H
 
 #include <iostream>
 #include <iomanip>
