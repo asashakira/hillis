@@ -1,9 +1,6 @@
 #ifndef RANDOM_H
 #define RANDOM_H
 
-#include "Random.h"
-using namespace std;
-
 // rng [from, to)
 template<typename T>
 T random(T from, T to);
