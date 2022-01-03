@@ -47,9 +47,9 @@ signed main() {
   for (int gen = 1; gen <= max_generation; gen++) {
     if (gen % 10 == 0) {
       cout << "gen " << gen << " : ";
-      cout << ga.AverageFitness() << '\n';
-      cout << ga.GetBestNetwork().Fitness() << '\n';
-      // ga.PrintPopulation();
+      cout << "avg fitness : " << ga.AverageFitness() << '\n';
+      auto sn = ga.GetBestNetwork();
+      cout << sn.Fitness() << ' ' << sn.Size() << '\n';
     }
     auto start = chrono::high_resolution_clock::now();
     ga.Selection();
