@@ -7,6 +7,7 @@ TestCases::TestCases(int n, int m, int mutation, vector<vector<int>> &tests) : t
   testsize = n;
   inputsize = m;
   mutation_rate = mutation;
+  zeroone = true;
   for (int i = 0; i < n; i++)
     t1[i] = tests[fastrng() % (int)tests.size()];
   for (int i = 0; i < n; i++)
@@ -17,6 +18,7 @@ TestCases::TestCases(int n, int m, int mutation) : testcases(2*n), t1(n), t2(n),
   testsize = n;
   inputsize = m;
   mutation_rate = mutation;
+  zeroone = false;
   for (int i = 0; i < n; i++) {
     vector<int> a(m);
     iota(a.begin(), a.end(), 1);
@@ -67,10 +69,13 @@ void TestCases::Crossover(TestCases &b) {
 void TestCases::Mutate() {
   for (int i = 0; i < testsize; i++) {
     for (int j = 0; j < inputsize; j++) {
-      if (!(fastrng() % mutation_rate)) swap(g1[i][j], g1[i][fastrng() % inputsize]);
-      if (!(fastrng() % mutation_rate)) swap(g2[i][j], g2[i][fastrng() % inputsize]);
-      // if (!(fastrng() % mutation_rate)) g1[i][j] ^= 1;
-      // if (!(fastrng() % mutation_rate)) g2[i][j] ^= 1;
+      if (zeroone) {
+        if (!(fastrng() % mutation_rate)) g1[i][j] ^= 1;
+        if (!(fastrng() % mutation_rate)) g2[i][j] ^= 1;
+      } else {
+        if (!(fastrng() % mutation_rate)) swap(g1[i][j], g1[i][fastrng() % inputsize]);
+        if (!(fastrng() % mutation_rate)) swap(g2[i][j], g2[i][fastrng() % inputsize]);
+      }
     }
   }
 }

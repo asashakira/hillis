@@ -9,6 +9,7 @@ class TestCases {
   int testsize;
   int inputsize;
   int mutation_rate;
+  bool zeroone;
 public:
   vector<vector<int>> testcases, t1, t2, g1, g2;
   TestCases(int n, int m, int mutate, vector<vector<int>> &tests);

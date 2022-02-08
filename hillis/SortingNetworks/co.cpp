@@ -33,7 +33,7 @@ signed main() {
   const int crossover = popsize / 2;
   const int mutation = 1000;
   const int inputsize = 8;
-  const int comparesize = 15;
+  const int comparesize = 20;
   const int testsize = 10;
   const int max_generation = 500;
 

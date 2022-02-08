@@ -16,13 +16,13 @@ GeneticAlgorithm::GeneticAlgorithm(int popsize, int crossover, int mutation, int
   input_size = inputsize;
   compare_size = comparesize;
   test_size = testsize;
-  SortingNetwork sn(comparesize, inputsize);
+  SortingNetwork sn(comparesize, inputsize, mutation);
   best = sn;
   // making population
   population.resize(height);
   for (int i = 0; i < height; i++) {
     for (int j = 0; j < width; j++) {
-      population[i].push_back(SortingNetwork(comparesize, inputsize));
+      population[i].push_back(SortingNetwork(comparesize, inputsize, mutation));
     }
   }
   // making test cases
@@ -73,9 +73,9 @@ void GeneticAlgorithm::Evaluate() {
 
 void GeneticAlgorithm::Selection() {
   // cull bottom 50%
-  vector<pair<float,pair<int,int>>> v(population_size);
+  vector<pair<pair<float,int>,pair<int,int>>> v(population_size);
   for (int i = 0; i < height; i++) for (int j = 0; j < width; j++)
-    v[i] = {population[i][j].Fitness(), {i, j}};
+    v[i] = {{population[i][j].Fitness(), -population[i][j].Size()}, {i, j}};
   sort(v.begin(), v.end());
   for (int idx = 0; idx < population_size/2; idx++) {
     auto [i, j] = v[idx].second;
@@ -87,9 +87,8 @@ void GeneticAlgorithm::Selection() {
     }
   }
 
-  for (int i = 0; i < height; i++)
-    for (int j = 0; j < width; j++)
-      population[i][j].CreateGametes();
+  for (int i = 0; i < height; i++) for (int j = 0; j < width; j++)
+    population[i][j].CreateGametes();
 
   for (int i = 0; i < height; i++) {
     for (int j = 0; j < width; j++) {
@@ -105,10 +104,6 @@ void GeneticAlgorithm::Selection() {
       population[i][j].Crossover(population[ni][nj]);
     }
   }
-
-  for (auto &networks : population)
-    for (auto &network : networks)
-      network.Mutate(mutation_rate);
 }
 
 float GeneticAlgorithm::AverageFitness() {
@@ -119,7 +114,20 @@ float GeneticAlgorithm::AverageFitness() {
   return sum / population_size;
 }
 
-SortingNetwork GeneticAlgorithm::GetBestNetwork() { return best; }
+SortingNetwork GeneticAlgorithm::GetBestNetwork() {
+  int best_i = 0, best_j = 0;
+  for (int i = 0; i < height; i++) for (int j = 0; j < width; j++) {
+    if (population[i][j].Fitness() > population[best_i][best_j].Fitness()) {
+      best_i = i;
+      best_j = j;
+    }
+    if (population[i][j].Fitness() == population[best_i][best_j].Fitness() and population[i][j].Size() < population[best_i][best_j].Size()) {
+      best_i = i;
+      best_j = j;
+    }
+  }
+  return population[best_i][best_j];
+}
 
 void GeneticAlgorithm::Print() {
   for (auto &p : population) {
