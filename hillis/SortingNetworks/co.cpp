@@ -24,12 +24,12 @@ void Test(SortingNetwork &sn, int n) {
 }
 
 signed main() {
-  const int popsize = 65536; // must be rootable
-  // const int popsize = 2500; // must be rootable
+  // const int popsize = 65536; // must be rootable
+  const int popsize = 2500; // must be rootable
   const int crossover = popsize / 2;
   const int mutation = 1000;
   const int inputsize = 8;
-  const int comparesize = 16;
+  const int comparesize = 19;
   const int testsize = 20;
   const int max_generation = 500;
 
@@ -52,6 +52,6 @@ signed main() {
   // cout << '\n';
   // co.PrintParasite();
   auto sn = co.GetBestNetwork();
-  sn.Print(); cout << '\n';
+  // sn.Print(); cout << '\n';
   Test(sn, inputsize);
 }

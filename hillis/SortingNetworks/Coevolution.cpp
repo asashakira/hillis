@@ -69,10 +69,10 @@ void Coevolution::Evaluate() {
   for (int i = 0; i < height; i++) {
     vector<thread> threads;
     for (int j = 0; j < width; j++) {
-      // Coevolution::CalculateFitness(host[i][j], parasite[i][j]);
-      threads.emplace_back(&Coevolution::CalculateFitness, this, ref(host[i][j]), ref(parasite[i][j]));
+      Coevolution::CalculateFitness(host[i][j], parasite[i][j]);
+      // threads.emplace_back(&Coevolution::CalculateFitness, this, ref(host[i][j]), ref(parasite[i][j]));
     }
-    for (auto &t : threads) t.join();
+    // for (auto &t : threads) t.join();
   }
 }
 
@@ -94,8 +94,8 @@ void Coevolution::Selection() {
     v[i*height+j] = {{host[i][j].Fitness(), -host[i][j].Size()}, {i, j}};
   sort(v.begin(), v.end());
   // cull bottom half
-  for (int idx = 0; idx < population_size/2; idx++) {
-    auto [i, j] = v[idx].second;
+  for (int h = 0; h < population_size/2; h++) {
+    auto [i, j] = v[h].second;
     for (int d = 0; d < 4; d++) {
       int ni = (i+di[d]+height) % height;
       int nj = (j+dj[d]+width) % width;
@@ -125,8 +125,8 @@ void Coevolution::Selection() {
     v[i*height+j] = {{parasite[i][j].Fitness(), -parasite[i][j].Size()}, {i, j}};
   sort(v.begin(), v.end());
   // cull bottom half
-  for (int idx = 0; idx < population_size/2; idx++) {
-    auto [i, j] = v[idx].second;
+  for (int h = 0; h < population_size/2; h++) {
+    auto [i, j] = v[h].second;
     for (int d = 0; d < 4; d++) {
       int ni = (i+di[d]+height) % height;
       int nj = (j+dj[d]+width) % width;
