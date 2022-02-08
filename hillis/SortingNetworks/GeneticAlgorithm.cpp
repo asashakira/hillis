@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <math.h>
 #include <thread>
+#include <iostream>
 
 using namespace std;
 
@@ -15,6 +16,8 @@ GeneticAlgorithm::GeneticAlgorithm(int popsize, int crossover, int mutation, int
   input_size = inputsize;
   compare_size = comparesize;
   test_size = testsize;
+  SortingNetwork sn(comparesize, inputsize);
+  best = sn;
   // making population
   population.resize(height);
   for (int i = 0; i < height; i++) {
@@ -23,15 +26,12 @@ GeneticAlgorithm::GeneticAlgorithm(int popsize, int crossover, int mutation, int
     }
   }
   // making test cases
-  vector<pair<vector<int>,int>> v(1 << input_size);
+  vector<vector<int>> v(1 << input_size);
   for (int bit = 0; bit < (1 << input_size); bit++) {
     vector<int> s(input_size);
-    int zero = 0;
-    for (int i = 0; i < input_size; i++) {
+    for (int i = 0; i < input_size; i++)
       s[i] = bit & 1<<i ? 1 : 0;
-      zero += s[i] == 0;
-    }
-    v[bit] = {s, zero};
+    v[bit] = s;
   }
   tests = v;
 }
@@ -39,33 +39,27 @@ GeneticAlgorithm::GeneticAlgorithm(int popsize, int crossover, int mutation, int
 const int di[] = {1, 0, -1, 0};
 const int dj[] = {0, 1, 0, -1};
 
-void GeneticAlgorithm::CalculateFitness(SortingNetwork &sn, vector<pair<vector<int>,int>> &tests) {
+void GeneticAlgorithm::CalculateFitness(SortingNetwork &sn, vector<vector<int>> &tests) {
   float fitness = 0;
   sn.Merge();
-  for (auto [t, zeros] : tests) {
+  for (int i = 0; i < test_size; i++) {
+    auto t = tests[i];
+    auto a = t;
+    sort(a.begin(), a.end());
     sn.Sort(t);
-    for (auto x : t) {
-      if (zeros) {
-        if (x == 0)
-          fitness++;
-        zeros--;
-      } else {
-        if (x == 1)
-          fitness++;
-      }
-    }
+    if (t == a) fitness++;
   }
-  fitness /= tests.size() * input_size;
-  if (fitness == 1)
-    fitness += 0.01 * (compare_size*2 - sn.Size());
+  fitness /= test_size;
+  if (fitness == 1) fitness += 0.01 * (compare_size*2 - sn.Size());
   sn.SetFitness(fitness);
+  if (sn.Fitness() >= best.Fitness()) best = sn;
 }
 
 void GeneticAlgorithm::Evaluate() {
-  vector<pair<vector<int>,int>> t(test_size); // tests to evaluate
+  vector<vector<int>> t(test_size); // tests to evaluate
   for (int i = 0; i < test_size; i++)
-    // t[i] = tests[i];
-    t[i] = tests[fastrng() % (int)tests.size()];
+    t[i] = tests[i];
+    // t[i] = tests[fastrng() % (int)tests.size()];
 
   // evaluate fitness of each network
   vector<thread> threads;
@@ -98,6 +92,7 @@ void GeneticAlgorithm::Selection() {
 
   for (int i = 0; i < height; i++) {
     for (int j = 0; j < width; j++) {
+      if (i == v.back().second.first and j == v.back().second.second) continue;
       int ni = i;
       int nj = j;
       while (fastrng() % 2) {
@@ -123,19 +118,7 @@ float GeneticAlgorithm::AverageFitness() {
   return sum / population_size;
 }
 
-SortingNetwork GeneticAlgorithm::GetBestNetwork() {
-  int best_i, best_j;
-  best_i = best_j = 0;
-  for (int i = 0; i < height; i++) {
-    for (int j = 0; j < width; j++) {
-      if (population[best_i][best_j].Fitness() < population[i][j].Fitness()) {
-        best_i = i;
-        best_j = j;
-      }
-    }
-  }
-  return population[best_i][best_j];
-}
+SortingNetwork GeneticAlgorithm::GetBestNetwork() { return best; }
 
 void GeneticAlgorithm::Print() {
   for (auto &p : population) {

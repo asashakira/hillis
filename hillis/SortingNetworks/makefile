@@ -4,7 +4,7 @@ LIBS = -lpthread -lm
 SRC = SortingNetwork.cpp Random.cpp
 OBJ = $(SRC:.cpp=.o)
 SN = sn.o GeneticAlgorithm.o
-CO = co.o Coevolution.o TestCase.o
+CO = co.o Coevolution.o TestCases.o
 
 sn: $(SN) $(OBJ)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)

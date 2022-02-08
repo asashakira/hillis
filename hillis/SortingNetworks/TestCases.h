@@ -4,19 +4,19 @@
 
 using namespace std;
 
-class TestCase {
-public:
-  vector<int> testcase;
-  int zeros;
-};
-
 class TestCases {
   float fitness;
+  int testsize;
+  int inputsize;
 public:
-  vector<TestCase> testcases, g1, g2;
-  TestCases(int testsize, int inputsize);
-  float Fitness() { return fitness; }
+  vector<vector<int>> testcases, t1, t2, g1, g2;
+  TestCases(int n, int m, vector<vector<int>> &tests);
+  TestCases(int n, int m);
+  void Merge();
   void CreateGametes();
   void Crossover(TestCases &b);
   void Mutate(int mutation_rate);
+  float Fitness() { return fitness; }
+  void SetFitness(float f) { fitness = f; }
+  int Size() { return testcases.size(); }
 };

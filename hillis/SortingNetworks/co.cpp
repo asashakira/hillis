@@ -29,11 +29,33 @@ void Test(SortingNetwork &sn, int n) {
 
 signed main() {
   // const int popsize = 65536; // must be rootable
-  const int popsize = 50*50; // must be rootable
+  const int popsize = 10000; // must be rootable
   const int crossover = popsize / 2;
   const int mutation = 1000;
-  const int inputsize = 16;
-  const int comparesize = 60;
-  const int testsize = 256;
+  const int inputsize = 8;
+  const int comparesize = 20;
+  const int testsize = 10;
   const int max_generation = 500;
+
+  Coevolution co(popsize, crossover, mutation, inputsize, comparesize, testsize);
+  co.Evaluate();
+  for (int gen = 1; gen <= max_generation; gen++) {
+    if (gen % 10 == 0) {
+      cout << "gen: " << gen << '\n';
+      cout << "avghost: " << co.AverageHostFitness() << '\n';
+      cout << "avgpara: " << co.AverageParasiteFitness() << '\n';
+      auto sn = co.GetBestNetwork();
+      cout << sn.Fitness() << ' ' << sn.Size() << '\n';
+      cout << '\n';
+    }
+    co.Selection();
+    co.Evaluate();
+  }
+  // co.PrintHost();
+  // cout << '\n';
+  // co.PrintParasite();
+  auto sn = co.GetBestNetwork();
+  // sn.Print(); cout << '\n';
+  Test(sn, inputsize);
+  cout << sn.Fitness() << '\n';
 }

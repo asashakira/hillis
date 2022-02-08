@@ -7,8 +7,8 @@ using namespace std;
 
 class SortingNetwork {
 private:
-  vector<pair<int,int>> c1, c2, compares, g1, g2;
-  float fitness = 0;
+  vector<pair<int,int>> compares, c1, c2, g1, g2;
+  float fitness=0;
   int input_size;
   int compare_size;
 public:

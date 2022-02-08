@@ -1,5 +1,5 @@
-#include "Random.h"
 #include "GeneticAlgorithm.h"
+#include "Random.h"
 #include <vector>
 #include <algorithm>
 #include <numeric>
@@ -29,34 +29,35 @@ void Test(SortingNetwork &sn, int n) {
 
 signed main() {
   // const int popsize = 65536; // must be rootable
-  const int popsize = 50*50; // must be rootable
+  const int popsize = 100; // must be rootable
   const int crossover = popsize / 2;
   const int mutation = 1000;
-  const int inputsize = 16;
-  const int comparesize = 60;
+  const int inputsize = 8;
+  const int comparesize = 20;
   const int testsize = 256;
   const int max_generation = 500;
 
-  GeneticAlgorithm ga(popsize, crossover, mutation, inputsize, comparesize, testsize);
-  ga.Evaluate();
   // ga.PrintPopulation();
-  for (int gen = 1; gen <= max_generation; gen++) {
-    if (gen % 10 == 0) {
-      cout << "gen " << gen << " : ";
-      cout << "avg fitness : " << ga.AverageFitness() << '\n';
-      auto sn = ga.GetBestNetwork();
-      cout << sn.Fitness() << ' ' << sn.Size() << '\n';
-    }
-    auto start = chrono::high_resolution_clock::now();
-    ga.Selection();
+  for (int max_gen = 500; max_gen <= max_generation; max_gen+=10) {
+    GeneticAlgorithm ga(popsize, crossover, mutation, inputsize, comparesize, testsize);
     ga.Evaluate();
-    auto stop = chrono::high_resolution_clock::now();
-    auto duration = chrono::duration_cast<chrono::milliseconds>(stop-start);
-    // cout << duration.count() << '\n';
+    for (int gen = 1; gen <= max_gen; gen++) {
+      if (gen % 10 == 0) {
+        // cout << "gen: " << gen << '\n';
+        // cout << "avghost: " << ga.AverageFitness() << '\n';
+        // auto sn = ga.GetBestNetwork();
+        // cout << sn.Fitness() << ' ' << sn.Size() << '\n';
+        // cout << '\n';
+      }
+      ga.Selection();
+      ga.Evaluate();
+    }
+    // ga.PrintPopulation();
+    auto sn = ga.GetBestNetwork();
+    sn.Print(); cout << '\n';
+    Test(sn, inputsize);
+    cout << max_gen << '\n';
+    cout << sn.Fitness() << '\n';
+    cout << '\n';
   }
-  // ga.PrintPopulation();
-  auto sn = ga.GetBestNetwork();
-  sn.Print(); cout << '\n';
-  Test(sn, inputsize);
-  cout << sn.Fitness() << '\n';
 }

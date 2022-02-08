@@ -7,7 +7,8 @@ using namespace std;
 class GeneticAlgorithm {
 private:
   vector<vector<SortingNetwork>> population;
-  vector<pair<vector<int>,int>> tests;
+  SortingNetwork best;
+  vector<vector<int>> tests;
   int population_size;
   int height, width;
   int crossover_rate;
@@ -17,7 +18,7 @@ private:
   int test_size;
 public:
   GeneticAlgorithm(int popsize, int crossover, int mutation, int inputsize, int comparesize, int testsize);
-  void CalculateFitness(SortingNetwork &sn, vector<pair<vector<int>,int>> &tests);
+  void CalculateFitness(SortingNetwork &sn, vector<vector<int>> &tests);
   void Evaluate();
   void Selection();
   SortingNetwork GetBestNetwork();

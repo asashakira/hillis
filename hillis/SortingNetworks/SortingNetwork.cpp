@@ -21,7 +21,7 @@ void SortingNetwork::Merge() {
   }
 }
 SortingNetwork::SortingNetwork() {}
-SortingNetwork::SortingNetwork(int size, int inputsize) : c1(size), c2(size), g1(size), g2(size) {
+SortingNetwork::SortingNetwork(int size, int inputsize) : compares(size*2), c1(size), c2(size), g1(size), g2(size) {
   input_size = inputsize;
   compare_size = size;
   if (inputsize == 16) {
@@ -38,7 +38,7 @@ SortingNetwork::SortingNetwork(int size, int inputsize) : c1(size), c2(size), g1
     c2 = c1;
 
     // create random network
-    for (int i = 8; i < size; i++) {
+    for (int i = 32; i < size; i++) {
       c1[i].first = fastrng() % inputsize;
       c1[i].second = fastrng() % inputsize;
       c2[i].first = fastrng() % inputsize;
@@ -71,8 +71,6 @@ void SortingNetwork::CreateGametes() {
 void SortingNetwork::Crossover(SortingNetwork &b) {
   c1 = g1;
   c2 = b.g2;
-  b.c1 = b.g1;
-  b.c2 = g2;
 }
 
 void SortingNetwork::Mutate(int mutation_rate) {
@@ -84,8 +82,6 @@ void SortingNetwork::Mutate(int mutation_rate) {
       flip <<= 1;
       if (flip > 8) flip = 1;
     }
-    // if (fastrng() % mutation_rate) a = fastrng() % input_size;
-    // if (fastrng() % mutation_rate) b = fastrng() % input_size;
   }
 }
 
@@ -99,4 +95,4 @@ void SortingNetwork::Sort(vector<int> &v) {
 
 void SortingNetwork::Printc1() { for (auto [a, b] : c1) cout << a << ',' << b << ' '; cout << '\n'; }
 void SortingNetwork::Printc2() { for (auto [a, b] : c2) cout << a << ',' << b << ' '; cout << '\n'; }
-void SortingNetwork::Print() { Merge(); for (auto [a, b] : compares) cout << a << ' ' << b << '\n'; }
+void SortingNetwork::Print() { for (auto [a, b] : compares) cout << a << ' ' << b << '\n'; }

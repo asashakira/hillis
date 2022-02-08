@@ -3,7 +3,9 @@
 #include <map>
 #include <algorithm>
 #include <math.h>
-#include <thread>
+#include <numeric>
+
+#include <iostream>
 
 using namespace std;
 
@@ -16,6 +18,9 @@ Coevolution::Coevolution(int popsize, int crossover, int mutation, int inputsize
   compare_size = comparesize;
   test_size = testsize;
 
+  SortingNetwork sn(comparesize, inputsize);
+  best = sn;
+
   // init host (sortingnetworks)
   host.resize(height);
   for (int i = 0; i < height; i++)
@@ -23,32 +28,40 @@ Coevolution::Coevolution(int popsize, int crossover, int mutation, int inputsize
       host[i].push_back(SortingNetwork(comparesize, inputsize));
 
   // making testcases
-  vector<pair<vector<int>,int>> tests(1 << input_size);
+  vector<vector<int>> tests(1 << input_size);
   for (int bit = 0; bit < (1 << input_size); bit++) {
     vector<int> s(input_size);
-    int zero = 0;
-    for (int i = 0; i < input_size; i++) {
+    for (int i = 0; i < input_size; i++)
       s[i] = bit & 1<<i ? 1 : 0;
-      zero += s[i] == 0;
-    }
-    tests[bit] = {s, zero};
+    tests[bit] = s;
   }
   // init parasite
   parasite.resize(height);
   for (int i = 0; i < height; i++) {
     for (int j = 0; j < width; j++) {
+      // TestCases t(testsize, inputsize, tests);
       TestCases t(testsize, inputsize);
-      for (int k = 0; k < test_size; k++) {
-        int r = fastrng() % (int)tests.size();
-        t.testcases[k].testcase = tests[r].first;
-        t.testcases[k].zeros = tests[r].second;
-      }
       parasite[i].push_back(t);
     }
   }
 }
 
 void Coevolution::CalculateFitness(SortingNetwork &sn, TestCases &tc) {
+  float fitness = 0;
+  sn.Merge();
+  tc.Merge();
+  vector<int> a(input_size);
+  iota(a.begin(), a.end(), 1);
+  for (auto t : tc.testcases) {
+    sn.Sort(t);
+    if (t == a) fitness++;
+  }
+  fitness /= tc.Size();
+  if (fitness == 1) fitness += 0.01 * (compare_size*2 - sn.Size());
+  sn.SetFitness(fitness);
+  tc.SetFitness(1-fitness);
+
+  if (sn.Fitness() >= best.Fitness()) best = sn;
 }
 
 void Coevolution::Evaluate() {
@@ -98,6 +111,7 @@ void Coevolution::Selection() {
   // host
   for (int i = 0; i < height; i++) {
     for (int j = 0; j < width; j++) {
+      if (i == v.back().second.first and j == v.back().second.second) continue;
       int ni = i, nj = j;
       while (fastrng() % 2) {
         int r = fastrng() % 4;
@@ -126,14 +140,17 @@ void Coevolution::Selection() {
 
   // Mutation
   // host
-  for (auto &networks : host)
-    for (auto &network : networks)
-      network.Mutate(mutation_rate);
+  for (int i = 0; i < height; i++)
+    for (int j = 0; j < width; j++)
+      host[i][j].Mutate(mutation_rate);
+
   // parasite
-  // TODO
+  for (int i = 0; i < height; i++)
+    for (int j = 0; j < width; j++)
+      parasite[i][j].Mutate(mutation_rate);
 }
 
-float Coevolution::AverageFitness() {
+float Coevolution::AverageHostFitness() {
   float sum = 0;
   for (int i = 0; i < height; i++)
     for (int j = 0; j < width; j++)
@@ -141,18 +158,16 @@ float Coevolution::AverageFitness() {
   return sum / population_size;
 }
 
+float Coevolution::AverageParasiteFitness() {
+  float sum = 0;
+  for (int i = 0; i < height; i++)
+    for (int j = 0; j < width; j++)
+      sum += parasite[i][j].Fitness();
+  return sum / population_size;
+}
+
 SortingNetwork Coevolution::GetBestNetwork() {
-  int best_i, best_j;
-  best_i = best_j = 0;
-  for (int i = 0; i < height; i++) {
-    for (int j = 0; j < width; j++) {
-      if (host[best_i][best_j].Fitness() < host[i][j].Fitness()) {
-        best_i = i;
-        best_j = j;
-      }
-    }
-  }
-  return host[best_i][best_j];
+  return best;
 }
 
 void Coevolution::Print() {
@@ -164,8 +179,15 @@ void Coevolution::Print() {
     }
   }
 }
-void Coevolution::PrintPopulation() {
+void Coevolution::PrintHost() {
   for (auto &p : host) {
+    for (auto &x : p)
+      cout << x.Fitness() << ' ';
+    cout << '\n';
+  }
+}
+void Coevolution::PrintParasite() {
+  for (auto &p : parasite) {
     for (auto &x : p)
       cout << x.Fitness() << ' ';
     cout << '\n';
