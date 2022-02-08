@@ -25,7 +25,7 @@ void Test(SortingNetwork &sn, int n) {
 
 signed main() {
   // const int popsize = 65536; // must be rootable
-  const int popsize = 2500; // must be rootable
+  const int popsize = 100; // must be rootable
   const int crossover = popsize / 2;
   const int mutation = 1000;
   const int inputsize = 8;
@@ -53,7 +53,7 @@ signed main() {
     // sn.Print(); cout << '\n';
     Test(sn, inputsize);
     cout << max_gen << '\n';
-    cout << sn.Fitness() << '\n';
+    cout << sn.Fitness()*100 << "%\n";
     cout << '\n';
   }
 }
