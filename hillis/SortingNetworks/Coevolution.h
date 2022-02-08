@@ -1,13 +1,14 @@
 #pragma once
 
 #include "SortingNetwork.h"
+#include "TestCases.h"
 
 using namespace std;
 
-class GeneticAlgorithm {
+class Coevolution {
 private:
-  vector<vector<SortingNetwork>> population;
-  vector<pair<vector<int>,int>> tests;
+  vector<vector<SortingNetwork>> host;
+  vector<vector<TestCases>> parasite;
   int population_size;
   int height, width;
   int crossover_rate;
@@ -16,8 +17,8 @@ private:
   int compare_size;
   int test_size;
 public:
-  GeneticAlgorithm(int popsize, int crossover, int mutation, int inputsize, int comparesize, int testsize);
-  void CalculateFitness(SortingNetwork &sn, vector<pair<vector<int>,int>> &tests);
+  Coevolution(int popsize, int crossover, int mutation, int inputsize, int comparesize, int testcases);
+  void CalculateFitness(SortingNetwork &sn, TestCases &tc);
   void Evaluate();
   void Selection();
   SortingNetwork GetBestNetwork();
