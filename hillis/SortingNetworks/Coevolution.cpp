@@ -70,8 +70,6 @@ void Coevolution::Evaluate() {
     vector<thread> threads;
     for (int j = 0; j < width; j++) {
       // Coevolution::CalculateFitness(host[i][j], parasite[i][j]);
-      // thread t(&Coevolution::CalculateFitness, &host[i][j], &parasite[i][j]);
-      // threads.push_back(move(t));
       threads.emplace_back(&Coevolution::CalculateFitness, this, ref(host[i][j]), ref(parasite[i][j]));
     }
     for (auto &t : threads) t.join();
@@ -83,20 +81,8 @@ void Coevolution::Selection() {
   const int dj[] = {0, 1, 0, -1};
 
   // replace lower-scoring individual
-  // host
   vector<pair<pair<float,int>,pair<int,int>>> v(population_size);
-  for (int i = 0; i < height; i++) for (int j = 0; j < width; j++)
-    v[i] = {{host[i][j].Fitness(), -host[i][j].Size()}, {i, j}};
-  sort(v.begin(), v.end());
-  for (int idx = 0; idx < population_size/2; idx++) {
-    auto [i, j] = v[idx].second;
-    for (int d = 0; d < 4; d++) {
-      int ni = (i+di[d]+height) % height;
-      int nj = (j+dj[d]+width) % width;
-      if (host[i][j].Fitness() < host[ni][nj].Fitness())
-        host[i][j] = host[ni][nj];
-    }
-  }
+
   // parasite
   for (int i = 0; i < height; i++) for (int j = 0; j < width; j++)
     v[i] = {{parasite[i][j].Fitness(), -parasite[i][j].Size()}, {i, j}};
@@ -111,6 +97,19 @@ void Coevolution::Selection() {
     }
   }
 
+  // host
+  for (int i = 0; i < height; i++) for (int j = 0; j < width; j++)
+    v[i] = {{host[i][j].Fitness(), -host[i][j].Size()}, {i, j}};
+  sort(v.begin(), v.end());
+  for (int idx = 0; idx < population_size/2; idx++) {
+    auto [i, j] = v[idx].second;
+    for (int d = 0; d < 4; d++) {
+      int ni = (i+di[d]+height) % height;
+      int nj = (j+dj[d]+width) % width;
+      if (host[i][j].Fitness() < host[ni][nj].Fitness())
+        host[i][j] = host[ni][nj];
+    }
+  }
   for (int i = 0; i < height; i++) for (int j = 0; j < width; j++) {
     host[i][j].CreateGametes();
     parasite[i][j].CreateGametes();

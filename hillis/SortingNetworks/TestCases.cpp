@@ -3,7 +3,7 @@
 #include <iostream>
 #include <numeric>
 
-TestCases::TestCases(int n, int m, vector<vector<int>> &tests) : t1(n), t2(n), g1(n), g2(n) {
+TestCases::TestCases(int n, int m, vector<vector<int>> &tests) : testcases(2*n), t1(n), t2(n), g1(n), g2(n) {
   testsize = n;
   inputsize = m;
   for (int i = 0; i < n; i++)
@@ -12,7 +12,7 @@ TestCases::TestCases(int n, int m, vector<vector<int>> &tests) : t1(n), t2(n), g
     t2[i] = tests[fastrng() % (int)tests.size()];
 }
 
-TestCases::TestCases(int n, int m) : t1(n), t2(n), g1(n), g2(n) {
+TestCases::TestCases(int n, int m) : testcases(2*n), t1(n), t2(n), g1(n), g2(n) {
   testsize = n;
   inputsize = m;
   for (int i = 0; i < n; i++) {
