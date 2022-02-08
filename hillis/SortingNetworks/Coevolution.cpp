@@ -3,7 +3,6 @@
 #include <map>
 #include <algorithm>
 #include <math.h>
-#include <numeric>
 #include <thread>
 
 #include <iostream>
@@ -40,8 +39,8 @@ Coevolution::Coevolution(int popsize, int crossover, int mutation, int inputsize
   parasite.resize(height);
   for (int i = 0; i < height; i++) {
     for (int j = 0; j < width; j++) {
-      // TestCases t(testsize, inputsize, tests);
-      TestCases t(testsize, inputsize);
+      TestCases t(testsize, inputsize, tests);
+      // TestCases t(testsize, inputsize);
       parasite[i].push_back(t);
     }
   }
@@ -51,18 +50,19 @@ void Coevolution::CalculateFitness(SortingNetwork &sn, TestCases &tc) {
   float fitness = 0;
   sn.Merge();
   tc.Merge();
-  vector<int> a(input_size);
-  iota(a.begin(), a.end(), 1);
   for (auto t : tc.testcases) {
+    auto a = t;
+    sort(a.begin(), a.end());
     sn.Sort(t);
     if (t == a) fitness++;
   }
   fitness /= tc.Size();
-  if (fitness == 1) fitness += 0.01 * (compare_size*2 - sn.Size());
+  // if (fitness == 1) fitness += 0.01 * (compare_size*2 - sn.Size());
   sn.SetFitness(fitness);
   tc.SetFitness(1-fitness);
 
-  if (sn.Fitness() >= best.Fitness()) best = sn;
+  if (sn.Fitness() > best.Fitness()) best = sn;
+  if (sn.Fitness() == 1 and sn.Size() < best.Fitness()) best = sn;
 }
 
 void Coevolution::Evaluate() {
@@ -84,9 +84,9 @@ void Coevolution::Selection() {
 
   // replace lower-scoring individual
   // host
-  vector<pair<float,pair<int,int>>> v(population_size);
+  vector<pair<pair<float,int>,pair<int,int>>> v(population_size);
   for (int i = 0; i < height; i++) for (int j = 0; j < width; j++)
-    v[i] = {host[i][j].Fitness(), {i, j}};
+    v[i] = {{host[i][j].Fitness(), -host[i][j].Size()}, {i, j}};
   sort(v.begin(), v.end());
   for (int idx = 0; idx < population_size/2; idx++) {
     auto [i, j] = v[idx].second;
@@ -99,7 +99,7 @@ void Coevolution::Selection() {
   }
   // parasite
   for (int i = 0; i < height; i++) for (int j = 0; j < width; j++)
-    v[i] = {parasite[i][j].Fitness(), {i, j}};
+    v[i] = {{parasite[i][j].Fitness(), -parasite[i][j].Size()}, {i, j}};
   sort(v.begin(), v.end());
   for (int idx = 0; idx < population_size/2; idx++) {
     auto [i, j] = v[idx].second;
@@ -149,9 +149,10 @@ void Coevolution::Selection() {
 
   // Mutation
   // host
-  for (int i = 0; i < height; i++)
-    for (int j = 0; j < width; j++)
-      host[i][j].Mutate(mutation_rate);
+  for (int i = 0; i < height; i++) for (int j = 0; j < width; j++) {
+    if (i == v.back().second.first and j == v.back().second.second) continue;
+    host[i][j].Mutate(mutation_rate);
+  }
 
   // parasite
   for (int i = 0; i < height; i++)
@@ -176,7 +177,18 @@ float Coevolution::AverageParasiteFitness() {
 }
 
 SortingNetwork Coevolution::GetBestNetwork() {
-  return best;
+  int best_i = 0, best_j = 0;
+  for (int i = 0; i < height; i++) for (int j = 0; j < width; j++) {
+    if (host[i][j].Fitness() > host[best_i][best_j].Fitness()) {
+      best_i = i;
+      best_j = j;
+    }
+    if (host[i][j].Fitness() == host[best_i][best_j].Fitness() and host[i][j].Size() < host[best_i][best_j].Size()) {
+      best_i = i;
+      best_j = j;
+    }
+  }
+  return host[best_i][best_j];
 }
 
 void Coevolution::Print() {

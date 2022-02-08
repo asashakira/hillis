@@ -64,8 +64,8 @@ void TestCases::Mutate(int mutation_rate) {
   for (auto t : testcases) {
     for (int i = 0; i < inputsize; i++) {
       if (fastrng() % mutation_rate) continue;
-      t[i] = fastrng() % inputsize;
-      // t.testcase[i] ^= 1;
+      // t[i] = fastrng() % inputsize;
+      t[i] ^= 1;
     }
   }
 }
