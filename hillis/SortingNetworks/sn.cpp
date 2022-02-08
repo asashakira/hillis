@@ -25,7 +25,7 @@ void Test(SortingNetwork &sn, int n) {
 
 signed main() {
   // const int popsize = 65536; // must be rootable
-  const int popsize = 100; // must be rootable
+  const int popsize = 10000; // must be rootable
   const int crossover = popsize / 2;
   const int mutation = 1000;
   const int inputsize = 8;
@@ -34,10 +34,10 @@ signed main() {
   const int max_generation = 500;
 
   // ga.PrintPopulation();
-  for (int max_gen = 500; max_gen <= max_generation; max_gen+=10) {
-    GeneticAlgorithm ga(popsize, crossover, mutation, inputsize, comparesize, testsize);
+  for (int i = 2; i*i <= popsize; i++) {
+    GeneticAlgorithm ga(i*i, crossover, mutation, inputsize, comparesize, testsize);
     ga.Evaluate();
-    for (int gen = 1; gen <= max_gen; gen++) {
+    for (int gen = 1; gen <= max_generation; gen++) {
       if (gen % 10 == 0) {
         cout << "gen: " << gen << '\n';
         cout << "avg: " << ga.AverageFitness() << '\n';
