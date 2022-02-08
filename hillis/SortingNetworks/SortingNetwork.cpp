@@ -6,20 +6,6 @@
 
 using namespace std;
 
-void SortingNetwork::Merge() {
-  compares.clear();
-  for (int i = 0; i < (int)c1.size(); i++) {
-    if (c1[i].first == c2[i].first and c1[i].second == c2[i].second) {
-      if (c1[i].first == c1[i].second) continue;
-      compares.push_back(c1[i]);
-    } else {
-      if (c1[i].first != c1[i].second)
-        compares.push_back(c1[i]);
-      if (c2[i].first != c2[i].second)
-        compares.push_back(c2[i]);
-    }
-  }
-}
 SortingNetwork::SortingNetwork() {}
 SortingNetwork::SortingNetwork(int size, int inputsize, int mutation) : compares(size*2), c1(size), c2(size), g1(size), g2(size) {
   input_size = inputsize;
@@ -44,10 +30,6 @@ SortingNetwork::SortingNetwork(int size, int inputsize, int mutation) : compares
       c1[i].second = fastrng() % inputsize;
       c2[i].first = fastrng() % inputsize;
       c2[i].second = fastrng() % inputsize;
-      // c1[i].first = random(0, inputsize);
-      // c1[i].second = random(0, inputsize);
-      // c2[i].first = random(0, inputsize);
-      // c2[i].second = random(0, inputsize);
     }
   } else {
     for (int i = 0; i < size; i++) {
@@ -55,6 +37,21 @@ SortingNetwork::SortingNetwork(int size, int inputsize, int mutation) : compares
       c1[i].second = fastrng() % inputsize;
       c2[i].first = fastrng() % inputsize;
       c2[i].second = fastrng() % inputsize;
+    }
+  }
+}
+
+void SortingNetwork::Merge() {
+  compares.clear();
+  for (int i = 0; i < (int)c1.size(); i++) {
+    if (c1[i] == c2[i]) {
+      if (c1[i].first == c1[i].second) continue;
+      compares.push_back(c1[i]);
+    } else {
+      if (c1[i].first != c1[i].second)
+        compares.push_back(c1[i]);
+      if (c2[i].first != c2[i].second)
+        compares.push_back(c2[i]);
     }
   }
 }
@@ -85,14 +82,14 @@ void SortingNetwork::Mutate() {
   }
 }
 
-void SortingNetwork::Sort(vector<int> &v) {
+void SortingNetwork::Sort(vector<int> &t) {
   Merge();
   for (auto [a, b] : compares) {
     if (a > b) swap(a, b);
-    if (v[a] > v[b]) swap(v[a], v[b]);
+    if (t[a] > t[b]) swap(t[a], t[b]);
   }
 }
 
 void SortingNetwork::Printc1() { for (auto [a, b] : c1) cout << a << ',' << b << ' '; cout << '\n'; }
 void SortingNetwork::Printc2() { for (auto [a, b] : c2) cout << a << ',' << b << ' '; cout << '\n'; }
-void SortingNetwork::Print() { for (auto [a, b] : compares) cout << a << ' ' << b << '\n'; }
+void SortingNetwork::Print() { Merge(); for (auto [a, b] : compares) cout << a << ' ' << b << '\n'; }

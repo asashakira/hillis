@@ -9,32 +9,28 @@
 using namespace std;
 
 void Test(SortingNetwork &sn, int n) {
-  vector<int> a(n);
-  iota(a.begin(), a.end(), 1);
-  for (int i = 0; i < n; i++) {
-    int r = fastrng() % n;
-    swap(a[i], a[r]);
-  }
-  auto b = a;
-  sort(b.begin(), b.end());
-  sn.Sort(a);
   int count = 0;
-  for (int i = 0; i < n; i++) {
-    if (a[i] == b[i]) count++;
-    cout << b[i] << ' ' << a[i] << ' ' << (a[i] == b[i] ? "OK" : "NG") << '\n';
+  for (int bit = 0; bit < (1 << n); bit++) {
+    vector<int> a(n);
+    for (int i = 0; i < n; i++)
+      a[i] = bit & 1<<i ? 1 : 0;
+    auto b = a;
+    sort(b.begin(), b.end());
+    sn.Sort(a);
+    if (a == b) count++;
   }
-  cout << (float)count / n * 100 << "%\n";
+  cout << (float)count / (1<<n) * 100 << "%\n";
   cout << "Size: " << sn.Size() << '\n';
 }
 
 signed main() {
   const int popsize = 65536; // must be rootable
-  // const int popsize = 10000; // must be rootable
+  // const int popsize = 2500; // must be rootable
   const int crossover = popsize / 2;
   const int mutation = 1000;
   const int inputsize = 8;
-  const int comparesize = 20;
-  const int testsize = 10;
+  const int comparesize = 16;
+  const int testsize = 20;
   const int max_generation = 500;
 
   Coevolution co(popsize, crossover, mutation, inputsize, comparesize, testsize);
@@ -45,7 +41,8 @@ signed main() {
       cout << "host: " << co.AverageHostFitness() << '\n';
       cout << "para: " << co.AverageParasiteFitness() << '\n';
       auto sn = co.GetBestNetwork();
-      cout << sn.Fitness() << ' ' << sn.Size() << '\n';
+      cout << sn.Fitness()*100 << "%\n";
+      cout << "Size: " << sn.Size() << '\n';
       cout << '\n';
     }
     co.Selection();
@@ -55,7 +52,6 @@ signed main() {
   // cout << '\n';
   // co.PrintParasite();
   auto sn = co.GetBestNetwork();
-  // sn.Print(); cout << '\n';
+  sn.Print(); cout << '\n';
   Test(sn, inputsize);
-  cout << sn.Fitness() << '\n';
 }

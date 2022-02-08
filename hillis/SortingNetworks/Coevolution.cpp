@@ -76,31 +76,24 @@ void Coevolution::Evaluate() {
   }
 }
 
+const int di[] = {1, 0, -1, 0};
+const int dj[] = {0, 1, 0, -1};
 void Coevolution::Selection() {
-  const int di[] = {1, 0, -1, 0};
-  const int dj[] = {0, 1, 0, -1};
-
-  // replace lower-scoring individual
-  vector<pair<pair<float,int>,pair<int,int>>> v(population_size);
-
-  // parasite
-  for (int i = 0; i < height; i++) for (int j = 0; j < width; j++)
-    v[i] = {{parasite[i][j].Fitness(), -parasite[i][j].Size()}, {i, j}};
-  sort(v.begin(), v.end());
-  for (int idx = 0; idx < population_size/2; idx++) {
-    auto [i, j] = v[idx].second;
-    for (int d = 0; d < 4; d++) {
-      int ni = (i+di[d]+height) % height;
-      int nj = (j+dj[d]+width) % width;
-      if (parasite[i][j].Fitness() < parasite[ni][nj].Fitness())
-        parasite[i][j] = parasite[ni][nj];
-    }
+  // create gametes
+  for (int i = 0; i < height; i++) for (int j = 0; j < width; j++) {
+    host[i][j].CreateGametes();
+    parasite[i][j].CreateGametes();
   }
 
+  // vector to sort population by fitness and size
+  vector<pair<pair<float,int>,pair<int,int>>> v(population_size);
+
   // host
+  // sort host population
   for (int i = 0; i < height; i++) for (int j = 0; j < width; j++)
-    v[i] = {{host[i][j].Fitness(), -host[i][j].Size()}, {i, j}};
+    v[i*height+j] = {{host[i][j].Fitness(), -host[i][j].Size()}, {i, j}};
   sort(v.begin(), v.end());
+  // cull bottom half
   for (int idx = 0; idx < population_size/2; idx++) {
     auto [i, j] = v[idx].second;
     for (int d = 0; d < 4; d++) {
@@ -110,13 +103,38 @@ void Coevolution::Selection() {
         host[i][j] = host[ni][nj];
     }
   }
-  for (int i = 0; i < height; i++) for (int j = 0; j < width; j++) {
-    host[i][j].CreateGametes();
-    parasite[i][j].CreateGametes();
+  // walk around grid to find mate
+  for (int i = 0; i < height; i++) {
+    for (int j = 0; j < width; j++) {
+      // save #1
+      if (i == v.back().second.first and j == v.back().second.second) continue;
+      int ni = i, nj = j;
+      while (fastrng() % 2) {
+        int r = fastrng() % 4;
+        ni = (i+di[r]+height) % height;
+        nj = (j+dj[r]+width) % width;
+      }
+      // crossover
+      host[i][j].Crossover(host[ni][nj]);
+    }
   }
 
-  // walk around grid to find mate
-  // host
+  // parasite
+  //sort parasites
+  for (int i = 0; i < height; i++) for (int j = 0; j < width; j++)
+    v[i*height+j] = {{parasite[i][j].Fitness(), -parasite[i][j].Size()}, {i, j}};
+  sort(v.begin(), v.end());
+  // cull bottom half
+  for (int idx = 0; idx < population_size/2; idx++) {
+    auto [i, j] = v[idx].second;
+    for (int d = 0; d < 4; d++) {
+      int ni = (i+di[d]+height) % height;
+      int nj = (j+dj[d]+width) % width;
+      if (parasite[i][j].Fitness() < parasite[ni][nj].Fitness())
+        parasite[i][j] = parasite[ni][nj];
+    }
+  }
+  // walk around grid
   for (int i = 0; i < height; i++) {
     for (int j = 0; j < width; j++) {
       if (i == v.back().second.first and j == v.back().second.second) continue;
@@ -127,21 +145,6 @@ void Coevolution::Selection() {
         nj = (j+dj[r]+width) % width;
       }
       // crossover
-      if (i == ni and j == nj) continue;
-      host[i][j].Crossover(host[ni][nj]);
-    }
-  }
-  // parasite
-  for (int i = 0; i < height; i++) {
-    for (int j = 0; j < width; j++) {
-      int ni = i, nj = j;
-      while (fastrng() % 2) {
-        int r = fastrng() % 4;
-        ni = (i+di[r]+height) % height;
-        nj = (j+dj[r]+width) % width;
-      }
-      // crossover
-      if (i == ni and j == nj) continue;
       parasite[i][j].Crossover(parasite[ni][nj]);
     }
   }
@@ -178,15 +181,6 @@ SortingNetwork Coevolution::GetBestNetwork() {
   return host[best_i][best_j];
 }
 
-void Coevolution::Print() {
-  for (auto &p : host) {
-    for (auto &x : p) {
-      cout << x.Fitness() << '\n';
-      x.Print();
-      cout << '\n';
-    }
-  }
-}
 void Coevolution::PrintHost() {
   for (auto &p : host) {
     for (auto &x : p)

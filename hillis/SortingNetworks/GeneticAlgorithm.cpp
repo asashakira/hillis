@@ -36,9 +36,6 @@ GeneticAlgorithm::GeneticAlgorithm(int popsize, int crossover, int mutation, int
   tests = v;
 }
 
-const int di[] = {1, 0, -1, 0};
-const int dj[] = {0, 1, 0, -1};
-
 void GeneticAlgorithm::CalculateFitness(SortingNetwork &sn, vector<vector<int>> &tests) {
   float fitness = 0;
   sn.Merge();
@@ -50,36 +47,37 @@ void GeneticAlgorithm::CalculateFitness(SortingNetwork &sn, vector<vector<int>> 
     if (t == a) fitness++;
   }
   fitness /= test_size;
-  if (fitness == 1) fitness += 0.01 * (compare_size*2 - sn.Size());
+  // if (fitness == 1) fitness += 0.01 * (compare_size*2 - sn.Size());
   sn.SetFitness(fitness);
   if (sn.Fitness() >= best.Fitness()) best = sn;
 }
 
 void GeneticAlgorithm::Evaluate() {
   vector<vector<int>> t(test_size); // tests to evaluate
-  for (int i = 0; i < test_size; i++)
-    t[i] = tests[i];
-    // t[i] = tests[fastrng() % (int)tests.size()];
+  // for (int i = 0; i < test_size; i++) t[i] = tests[fastrng() % (int)tests.size()];
+  t = tests;
 
   // evaluate fitness of each network
   for (int i = 0; i < height; i++) {
     vector<thread> threads;
     for (int j = 0; j < width; j++) {
-    // GeneticAlgorithm::CalculateFitness(population[i][j], t);
-      threads.emplace_back(&GeneticAlgorithm::CalculateFitness, this, ref(population[i][j]), ref(t));
+      GeneticAlgorithm::CalculateFitness(population[i][j], t);
+      // threads.emplace_back(&GeneticAlgorithm::CalculateFitness, this, ref(population[i][j]), ref(t));
     }
-    for (auto &t : threads) t.join();
+    // for (auto &t : threads) t.join();
   }
 }
 
+const int di[] = {1, 0, -1, 0};
+const int dj[] = {0, 1, 0, -1};
 void GeneticAlgorithm::Selection() {
   // cull bottom 50%
   vector<pair<pair<float,int>,pair<int,int>>> v(population_size);
   for (int i = 0; i < height; i++) for (int j = 0; j < width; j++)
-    v[i] = {{population[i][j].Fitness(), -population[i][j].Size()}, {i, j}};
+    v[i*height+j] = {{population[i][j].Fitness(), -population[i][j].Size()}, {i, j}};
   sort(v.begin(), v.end());
-  for (int idx = 0; idx < population_size/2; idx++) {
-    auto [i, j] = v[idx].second;
+  for (int h = 0; h < population_size/2; h++) {
+    auto [i, j] = v[h].second;
     for (int d = 0; d < 4; d++) {
       int ni = (i+di[d]+height) % height;
       int nj = (j+dj[d]+width) % width;
@@ -91,19 +89,16 @@ void GeneticAlgorithm::Selection() {
   for (int i = 0; i < height; i++) for (int j = 0; j < width; j++)
     population[i][j].CreateGametes();
 
-  for (int i = 0; i < height; i++) {
-    for (int j = 0; j < width; j++) {
-      if (i == v.back().second.first and j == v.back().second.second) continue;
-      int ni = i;
-      int nj = j;
-      while (fastrng() % 2) {
-        int r = fastrng() % 4;
-        ni = (ni+di[r] + height) % height;
-        nj = (nj+dj[r] + width) % width;
-      }
-      if (i == ni and j == nj) continue;
-      population[i][j].Crossover(population[ni][nj]);
+  for (int i = 0; i < height; i++) for (int j = 0; j < width; j++) {
+    if (i == v.back().second.first and j == v.back().second.second) continue;
+    int ni = i;
+    int nj = j;
+    while (fastrng() % 2) {
+      int r = fastrng() % 4;
+      ni = (ni+di[r] + height) % height;
+      nj = (nj+dj[r] + width) % width;
     }
+    population[i][j].Crossover(population[ni][nj]);
   }
 }
 

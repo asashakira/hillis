@@ -55,7 +55,7 @@ void TestCases::CreateGametes() {
   g1 = t1;
   g2 = t2;
   int crossover_point = fastrng() % testsize;
-  for (int i = crossover_point; i < testsize; i++)
+  for (int i = 0; i < crossover_point; i++)
     swap(g1[i], g2[i]);
 
   TestCases::Mutate();

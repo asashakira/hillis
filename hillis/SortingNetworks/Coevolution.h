@@ -25,7 +25,6 @@ public:
   SortingNetwork GetBestNetwork();
   float AverageHostFitness();
   float AverageParasiteFitness();
-  void Print();
   void PrintHost();
   void PrintParasite();
 };
