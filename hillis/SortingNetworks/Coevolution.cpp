@@ -18,14 +18,14 @@ Coevolution::Coevolution(int popsize, int crossover, int mutation, int inputsize
   compare_size = comparesize;
   test_size = testsize;
 
-  SortingNetwork sn(comparesize, inputsize);
+  SortingNetwork sn(comparesize, inputsize, mutation);
   best = sn;
 
   // init host (sortingnetworks)
   host.resize(height);
   for (int i = 0; i < height; i++)
     for (int j = 0; j < width; j++)
-      host[i].push_back(SortingNetwork(comparesize, inputsize));
+      host[i].push_back(SortingNetwork(comparesize, inputsize, mutation));
 
   // making testcases
   vector<vector<int>> tests(1 << input_size);
@@ -39,8 +39,8 @@ Coevolution::Coevolution(int popsize, int crossover, int mutation, int inputsize
   parasite.resize(height);
   for (int i = 0; i < height; i++) {
     for (int j = 0; j < width; j++) {
-      TestCases t(testsize, inputsize, tests);
-      // TestCases t(testsize, inputsize);
+      // TestCases t(testsize, inputsize, mutation_rate, tests);
+      TestCases t(testsize, inputsize, mutation_rate);
       parasite[i].push_back(t);
     }
   }
@@ -145,18 +145,6 @@ void Coevolution::Selection() {
       parasite[i][j].Crossover(parasite[ni][nj]);
     }
   }
-
-  // Mutation
-  // host
-  for (int i = 0; i < height; i++) for (int j = 0; j < width; j++) {
-    if (i == v.back().second.first and j == v.back().second.second) continue;
-    host[i][j].Mutate(mutation_rate);
-  }
-
-  // parasite
-  for (int i = 0; i < height; i++)
-    for (int j = 0; j < width; j++)
-      parasite[i][j].Mutate(mutation_rate);
 }
 
 float Coevolution::AverageHostFitness() {

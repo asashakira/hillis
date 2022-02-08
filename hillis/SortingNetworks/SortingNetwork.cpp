@@ -21,9 +21,10 @@ void SortingNetwork::Merge() {
   }
 }
 SortingNetwork::SortingNetwork() {}
-SortingNetwork::SortingNetwork(int size, int inputsize) : compares(size*2), c1(size), c2(size), g1(size), g2(size) {
+SortingNetwork::SortingNetwork(int size, int inputsize, int mutation) : compares(size*2), c1(size), c2(size), g1(size), g2(size) {
   input_size = inputsize;
   compare_size = size;
+  mutation_rate = mutation;
   if (inputsize == 16) {
     int j = 0;
     c1[j++] = {0, 1}; c1[j++] = {2, 3}; c1[j++] = {4, 5}; c1[j++] = {6, 7};
@@ -66,22 +67,21 @@ void SortingNetwork::CreateGametes() {
     for (int j = i; j < i+crossover_point and j < compare_size; j++)
       swap(g1[i], g2[i]);
   }
+
+  SortingNetwork::Mutate();
 }
 
 void SortingNetwork::Crossover(SortingNetwork &b) {
   c1 = g1;
-  c2 = b.g2;
+  c2 = b.g1;
 }
 
-void SortingNetwork::Mutate(int mutation_rate) {
-  for (auto &[a, b] : compares) {
-    int flip = 1;
-    for (int i = 0; i < 8; i++) {
-      int r = fastrng() % mutation_rate;
-      if (!r) (i < 4 ? a : b) ^= flip;
-      flip <<= 1;
-      if (flip > 8) flip = 1;
-    }
+void SortingNetwork::Mutate() {
+  for (int i = 0; i < compare_size; i++) {
+    if (!(fastrng() % mutation_rate)) g1[i].first = fastrng() % input_size;
+    if (!(fastrng() % mutation_rate)) g1[i].second = fastrng() % input_size;
+    if (!(fastrng() % mutation_rate)) g2[i].first = fastrng() % input_size;
+    if (!(fastrng() % mutation_rate)) g2[i].second = fastrng() % input_size;
   }
 }
 

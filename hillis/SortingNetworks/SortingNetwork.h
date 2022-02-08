@@ -11,13 +11,14 @@ private:
   float fitness=0;
   int input_size;
   int compare_size;
+  int mutation_rate;
 public:
   SortingNetwork();
-  SortingNetwork(int size, int inputsize);
+  SortingNetwork(int size, int inputsize, int mutation);
   void Merge();
   void CreateGametes();
   void Crossover(SortingNetwork &b);
-  void Mutate(int mutation_rate);
+  void Mutate();
   void Sort(vector<int> &v);
   void Printc1();
   void Printc2();

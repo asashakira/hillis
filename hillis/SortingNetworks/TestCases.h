@@ -8,14 +8,15 @@ class TestCases {
   float fitness;
   int testsize;
   int inputsize;
+  int mutation_rate;
 public:
   vector<vector<int>> testcases, t1, t2, g1, g2;
-  TestCases(int n, int m, vector<vector<int>> &tests);
-  TestCases(int n, int m);
+  TestCases(int n, int m, int mutate, vector<vector<int>> &tests);
+  TestCases(int n, int m, int mutate);
   void Merge();
   void CreateGametes();
   void Crossover(TestCases &b);
-  void Mutate(int mutation_rate);
+  void Mutate();
   float Fitness() { return fitness; }
   void SetFitness(float f) { fitness = f; }
   int Size() { return testcases.size(); }
