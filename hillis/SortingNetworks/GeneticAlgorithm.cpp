@@ -63,10 +63,11 @@ void GeneticAlgorithm::Evaluate() {
 
   // evaluate fitness of each network
   vector<thread> threads;
-  for (int i = 0; i < height; i++) for (int j = 0; j < width; j++)
-    GeneticAlgorithm::CalculateFitness(population[i][j], t);
-      // threads.emplace_back(&GeneticAlgorithm::Calculate_Fitness, &population[i][j], ref(t));
-  // for (auto &t : threads) t.join();
+  for (int i = 0; i < height; i++) for (int j = 0; j < width; j++) {
+    // GeneticAlgorithm::CalculateFitness(population[i][j], t);
+    threads.emplace_back(&GeneticAlgorithm::CalculateFitness, this, ref(population[i][j]), ref(t));
+  }
+  for (auto &t : threads) t.join();
 
 }
 

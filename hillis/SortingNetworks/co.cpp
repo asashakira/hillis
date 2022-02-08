@@ -28,8 +28,8 @@ void Test(SortingNetwork &sn, int n) {
 }
 
 signed main() {
-  // const int popsize = 65536; // must be rootable
-  const int popsize = 10000; // must be rootable
+  const int popsize = 65536; // must be rootable
+  // const int popsize = 10000; // must be rootable
   const int crossover = popsize / 2;
   const int mutation = 1000;
   const int inputsize = 8;

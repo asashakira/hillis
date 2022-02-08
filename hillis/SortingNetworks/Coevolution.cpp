@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <math.h>
 #include <numeric>
+#include <thread>
 
 #include <iostream>
 
@@ -65,8 +66,16 @@ void Coevolution::CalculateFitness(SortingNetwork &sn, TestCases &tc) {
 }
 
 void Coevolution::Evaluate() {
-  for (int i = 0; i < height; i++) for (int j = 0; j < width; j++)
-    Coevolution::CalculateFitness(host[i][j], parasite[i][j]);
+  for (int i = 0; i < height; i++) {
+    vector<thread> threads;
+    for (int j = 0; j < width; j++) {
+      // Coevolution::CalculateFitness(host[i][j], parasite[i][j]);
+      // thread t(&Coevolution::CalculateFitness, &host[i][j], &parasite[i][j]);
+      // threads.push_back(move(t));
+      threads.emplace_back(&Coevolution::CalculateFitness, this, ref(host[i][j]), ref(parasite[i][j]));
+    }
+    for (auto &t : threads) t.join();
+  }
 }
 
 void Coevolution::Selection() {
