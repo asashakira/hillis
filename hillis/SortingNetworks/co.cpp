@@ -20,27 +20,25 @@ const int max_generation = 5000;
 int run() {
   Coevolution co(popsize, crossover, mutation, inputsize, comparesize, testsize);
   co.Evaluate();
+  SortingNetwork sn;
   for (int gen = 1; gen <= max_generation; gen++) {
     if (gen % 100 == 0) {
       cout << "gen: " << gen << '\n';
       cout << "host: " << co.AverageHostFitness() << '\n';
       cout << "para: " << co.AverageParasiteFitness() << '\n';
-      auto sn = co.AllTimeBest();
-      cout << sn.Test() << "%\n";
-      cout << "Size: " << sn.Size() << '\n';
-      if (sn.Size() == comparesize) return comparesize;
+      sn = co.AllTimeBest();
+      // cout << sn.Test() << "%\n";
+      // cout << "Size: " << sn.Size() << '\n';
+      if (sn.Size() == comparesize) break; 
       cout << '\n';
     }
     co.Selection();
     co.Evaluate();
   }
-  // auto sn = co.GetBestNetwork();
-  auto sn = co.AllTimeBest();
   sn.Print(); cout << '\n';
-  cout << sn.Test() << "%\n";
   cout << "Size: " << sn.Size() << '\n';
   cout << '\n';
-  return sn.Size();
+  return -1;
 }
 
 signed main() {

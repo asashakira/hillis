@@ -98,12 +98,14 @@ void Coevolution::Selection() {
   // walk around grid to find mate
   for (int i = 0; i < height; i++) {
     for (int j = 0; j < width; j++) {
+
       // save top 10
-      bool skip = false;
-      for (int k = 0; k < 5; k++)
-        if (i == v[population_size-k-1].second.first and j == v[population_size-k-1].second.second)
-          skip = true;
-      if (skip) continue;
+      // bool skip = false;
+      // for (int k = 0; k < 5; k++)
+        // if (i == v[population_size-k-1].second.first and j == v[population_size-k-1].second.second)
+          // skip = true;
+      // if (skip) continue;
+
       int ni = i, nj = j;
       while (fastrng() % 2) {
         int r = fastrng() % 4;
@@ -139,7 +141,7 @@ void Coevolution::Selection() {
   // walk around grid
   for (int i = 0; i < height; i++) {
     for (int j = 0; j < width; j++) {
-      if (i == v.back().second.first and j == v.back().second.second) continue;
+      // if (i == v.back().second.first and j == v.back().second.second) continue;
       int ni = i, nj = j;
       while (fastrng() % 2) {
         int r = fastrng() % 4;
