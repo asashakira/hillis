@@ -119,7 +119,6 @@ void SortingNetwork::Print() {
   int i = 0;
   for (auto [a, b] : compares) {
     printf("(%d, %d) ", a, b);
-    if (i % 10) cout << '\n';
-    i++;
+    if (++i % 10 == 0) cout << '\n';
   }
 }

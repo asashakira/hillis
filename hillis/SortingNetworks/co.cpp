@@ -8,17 +8,16 @@
 
 using namespace std;
 
-signed main() {
-  // const int popsize = 65536; // must be rootable
-  const int popsize = 25; // must be rootable
-  const int crossover = popsize / 2;
-  const int mutation = 1000;
-  const int inputsize = 6;
-  const int comparesize = 12;
-  const int testsize = 10;
-  const int max_generation = 500;
+// const int popsize = 65536; // must be rootable
+const int popsize = 900; // must be rootable
+const int crossover = popsize / 2;
+const int mutation = 1000;
+const int inputsize = 7;
+const int comparesize = 16;
+const int testsize = 10;
+const int max_generation = 5000;
 
-  auto start = chrono::high_resolution_clock::now();
+int run() {
   Coevolution co(popsize, crossover, mutation, inputsize, comparesize, testsize);
   co.Evaluate();
   for (int gen = 1; gen <= max_generation; gen++) {
@@ -26,9 +25,10 @@ signed main() {
       cout << "gen: " << gen << '\n';
       cout << "host: " << co.AverageHostFitness() << '\n';
       cout << "para: " << co.AverageParasiteFitness() << '\n';
-      auto sn = co.GetBestNetwork();
-      cout << sn.Fitness()*100 << "%\n";
+      auto sn = co.AllTimeBest();
+      cout << sn.Test() << "%\n";
       cout << "Size: " << sn.Size() << '\n';
+      if (sn.Size() == comparesize) return comparesize;
       cout << '\n';
     }
     co.Selection();
@@ -39,7 +39,21 @@ signed main() {
   sn.Print(); cout << '\n';
   cout << sn.Test() << "%\n";
   cout << "Size: " << sn.Size() << '\n';
+  cout << '\n';
+  return sn.Size();
+}
 
+signed main() {
+  auto start = chrono::high_resolution_clock::now();
+
+  int runs = 0;
+  int size = 0;
+  while (size != comparesize) {
+    runs++;
+    size = run();
+  }
+
+  cout << "runs: " << runs << '\n';
 
   auto stop = chrono::high_resolution_clock::now();
   auto duration = chrono::duration_cast<chrono::milliseconds>(stop-start);

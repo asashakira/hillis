@@ -57,8 +57,6 @@ void Coevolution::CalculateFitness(SortingNetwork &sn, TestCases &tc) {
   // if (fitness == 1) fitness += 0.01 * (compare_size*2 - sn.Size());
   sn.SetFitness(fitness);
   tc.SetFitness(1-fitness);
-
-  if (sn.Fitness() == 1) best.push_back(sn);
 }
 
 void Coevolution::Evaluate() {
@@ -102,7 +100,7 @@ void Coevolution::Selection() {
     for (int j = 0; j < width; j++) {
       // save top 10
       bool skip = false;
-      for (int k = 0; k < 10; k++)
+      for (int k = 0; k < 5; k++)
         if (i == v[population_size-k-1].second.first and j == v[population_size-k-1].second.second)
           skip = true;
       if (skip) continue;
@@ -117,6 +115,7 @@ void Coevolution::Selection() {
     }
   }
 
+  // adding best network
   for (int k = 0; k < 1; k++) {
     auto [i, j] = v[population_size-k-1].second;
     best.push_back(host[i][j]);
@@ -189,6 +188,10 @@ SortingNetwork Coevolution::AllTimeBest() {
   for (int i = 0; i < (int)best.size(); i++)
     v[i] = {{best[i].Test(), -best[i].Size()}, i};
   sort(v.rbegin(), v.rend());
+
+  for (int i = 0; i < 5; i++)
+    cout << v[i].first.first << ' ' << -v[i].first.second << '\n';
+
   return best[v[0].second];
 }
 
