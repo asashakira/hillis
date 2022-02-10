@@ -12,10 +12,10 @@ using namespace std;
 const int popsize = 900; // must be rootable
 const int crossover = popsize / 2;
 const int mutation = 1000;
-const int inputsize = 7;
-const int comparesize = 16;
+const int inputsize = 8;
+const int comparesize = 19;
 const int testsize = 10;
-const int max_generation = 5000;
+const int max_generation = 10000;
 
 int run() {
   Coevolution co(popsize, crossover, mutation, inputsize, comparesize, testsize);
@@ -38,7 +38,7 @@ int run() {
   sn.Print(); cout << '\n';
   cout << "Size: " << sn.Size() << '\n';
   cout << '\n';
-  return -1;
+  return sn.Size();
 }
 
 signed main() {

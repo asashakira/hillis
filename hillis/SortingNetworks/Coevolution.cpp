@@ -191,10 +191,18 @@ SortingNetwork Coevolution::AllTimeBest() {
     v[i] = {{best[i].Test(), -best[i].Size()}, i};
   sort(v.rbegin(), v.rend());
 
+  auto ret = best[v[0].second];
+
+  vector<SortingNetwork> new_best;
+  for (int i = 0; i < (int)best.size(); i++)
+    if (v[i].first.first == 100) new_best.push_back(best[i]);
+  swap(best, new_best);
+
+  cout << best.size() << '\n';
   for (int i = 0; i < 5; i++)
     cout << v[i].first.first << ' ' << -v[i].first.second << '\n';
 
-  return best[v[0].second];
+  return ret;
 }
 
 void Coevolution::PrintHost() {
