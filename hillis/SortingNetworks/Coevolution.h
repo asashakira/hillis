@@ -9,7 +9,7 @@ class Coevolution {
 private:
   vector<vector<SortingNetwork>> host;
   vector<vector<TestCases>> parasite;
-  SortingNetwork best;
+  vector<SortingNetwork> best;
   int population_size;
   int height, width;
   int crossover_rate;
@@ -23,6 +23,7 @@ public:
   void Evaluate();
   void Selection();
   SortingNetwork GetBestNetwork();
+  SortingNetwork AllTimeBest();
   float AverageHostFitness();
   float AverageParasiteFitness();
   void PrintHost();

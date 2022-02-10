@@ -18,9 +18,6 @@ Coevolution::Coevolution(int popsize, int crossover, int mutation, int inputsize
   compare_size = comparesize;
   test_size = testsize;
 
-  SortingNetwork sn(comparesize, inputsize, mutation);
-  best = sn;
-
   // init host (sortingnetworks)
   host.resize(height);
   for (int i = 0; i < height; i++)
@@ -61,17 +58,15 @@ void Coevolution::CalculateFitness(SortingNetwork &sn, TestCases &tc) {
   sn.SetFitness(fitness);
   tc.SetFitness(1-fitness);
 
-  if (sn.Fitness() > best.Fitness()) best = sn;
-  if (sn.Fitness() == 1 and sn.Size() < best.Fitness()) best = sn;
+  if (sn.Fitness() == 1) best.push_back(sn);
 }
 
 void Coevolution::Evaluate() {
   for (int i = 0; i < height; i++) {
     vector<thread> threads;
-    for (int j = 0; j < width; j++) {
+    for (int j = 0; j < width; j++)
       Coevolution::CalculateFitness(host[i][j], parasite[i][j]);
       // threads.emplace_back(&Coevolution::CalculateFitness, this, ref(host[i][j]), ref(parasite[i][j]));
-    }
     // for (auto &t : threads) t.join();
   }
 }
@@ -87,7 +82,6 @@ void Coevolution::Selection() {
 
   // vector to sort population by fitness and size
   vector<pair<pair<float,int>,pair<int,int>>> v(population_size);
-
   // host
   // sort host population
   for (int i = 0; i < height; i++) for (int j = 0; j < width; j++)
@@ -106,8 +100,12 @@ void Coevolution::Selection() {
   // walk around grid to find mate
   for (int i = 0; i < height; i++) {
     for (int j = 0; j < width; j++) {
-      // save #1
-      if (i == v.back().second.first and j == v.back().second.second) continue;
+      // save top 10
+      bool skip = false;
+      for (int k = 0; k < 10; k++)
+        if (i == v[population_size-k-1].second.first and j == v[population_size-k-1].second.second)
+          skip = true;
+      if (skip) continue;
       int ni = i, nj = j;
       while (fastrng() % 2) {
         int r = fastrng() % 4;
@@ -117,6 +115,11 @@ void Coevolution::Selection() {
       // crossover
       host[i][j].Crossover(host[ni][nj]);
     }
+  }
+
+  for (int k = 0; k < 1; k++) {
+    auto [i, j] = v[population_size-k-1].second;
+    best.push_back(host[i][j]);
   }
 
   // parasite
@@ -179,6 +182,14 @@ SortingNetwork Coevolution::GetBestNetwork() {
     }
   }
   return host[best_i][best_j];
+}
+
+SortingNetwork Coevolution::AllTimeBest() {
+  vector<pair<pair<float,int>,int>> v(best.size());
+  for (int i = 0; i < (int)best.size(); i++)
+    v[i] = {{best[i].Test(), -best[i].Size()}, i};
+  sort(v.rbegin(), v.rend());
+  return best[v[0].second];
 }
 
 void Coevolution::PrintHost() {

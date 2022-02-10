@@ -54,8 +54,8 @@ void GeneticAlgorithm::CalculateFitness(SortingNetwork &sn, vector<vector<int>> 
 
 void GeneticAlgorithm::Evaluate() {
   vector<vector<int>> t(test_size); // tests to evaluate
-  // for (int i = 0; i < test_size; i++) t[i] = tests[fastrng() % (int)tests.size()];
   t = tests;
+  for (int i = 0; i < test_size; i++) t[i] = tests[fastrng() % (int)tests.size()];
 
   // evaluate fitness of each network
   for (int i = 0; i < height; i++) {

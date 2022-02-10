@@ -41,6 +41,13 @@ SortingNetwork::SortingNetwork(int size, int inputsize, int mutation) : compares
   }
 }
 
+bool SortingNetwork::operator<(SortingNetwork &sn) {
+  auto a = Fitness();
+  auto b = sn.Fitness();
+  if (a == b) return Size() < sn.Size();
+  return a < b;
+}
+
 void SortingNetwork::Merge() {
   compares.clear();
   for (int i = 0; i < (int)c1.size(); i++) {
@@ -90,6 +97,29 @@ void SortingNetwork::Sort(vector<int> &t) {
   }
 }
 
+float SortingNetwork::Test() {
+  int n = input_size;
+  float count = 0;
+  for (int bit = 0; bit < (1 << n); bit++) {
+    vector<int> a(n);
+    for (int i = 0; i < n; i++)
+      a[i] = bit & 1<<i ? 1 : 0;
+    auto b = a;
+    sort(b.begin(), b.end());
+    Sort(a);
+    if (a == b) count++;
+  }
+  return count / (1<<n) * 100;
+}
+
 void SortingNetwork::Printc1() { for (auto [a, b] : c1) cout << a << ',' << b << ' '; cout << '\n'; }
 void SortingNetwork::Printc2() { for (auto [a, b] : c2) cout << a << ',' << b << ' '; cout << '\n'; }
-void SortingNetwork::Print() { Merge(); for (auto [a, b] : compares) cout << a << ' ' << b << '\n'; }
+void SortingNetwork::Print() {
+  Merge();
+  int i = 0;
+  for (auto [a, b] : compares) {
+    printf("(%d, %d) ", a, b);
+    if (i % 10) cout << '\n';
+    i++;
+  }
+}

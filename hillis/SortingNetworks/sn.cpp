@@ -5,6 +5,7 @@
 #include <numeric>
 #include <chrono>
 #include <future>
+#include <math.h>
 
 using namespace std;
 
@@ -25,35 +26,35 @@ void Test(SortingNetwork &sn, int n) {
 
 signed main() {
   // const int popsize = 65536; // must be rootable
-  const int popsize = 10000; // must be rootable
+  const int popsize = 625; // must be rootable
   const int crossover = popsize / 2;
   const int mutation = 1000;
-  const int inputsize = 8;
-  const int comparesize = 20;
-  const int testsize = 256;
+  const int inputsize = 12;
+  const int comparesize = 39;
+  const int testsize = pow(2, inputsize) < 1000 ? pow(2, inputsize) : 1000;
   const int max_generation = 500;
 
-  // ga.PrintPopulation();
-  for (int i = 2; i*i <= popsize; i++) {
-    GeneticAlgorithm ga(i*i, crossover, mutation, inputsize, comparesize, testsize);
-    ga.Evaluate();
-    for (int gen = 1; gen <= max_generation; gen++) {
-      if (gen % 10 == 0) {
-        cout << "gen: " << gen << '\n';
-        cout << "avg: " << ga.AverageFitness() << '\n';
-        auto sn = ga.GetBestNetwork();
-        cout << sn.Fitness()*100 << "% " << sn.Size() << '\n';
-        cout << '\n';
-      }
-      ga.Selection();
-      ga.Evaluate();
+  auto start = chrono::high_resolution_clock::now();
+  GeneticAlgorithm ga(popsize, crossover, mutation, inputsize, comparesize, testsize);
+  ga.Evaluate();
+  for (int gen = 1; gen <= max_generation; gen++) {
+    if (gen % 100 == 0) {
+      cout << "gen: " << gen << '\n';
+      cout << "avg: " << ga.AverageFitness() << '\n';
+      auto sn = ga.GetBestNetwork();
+      cout << sn.Fitness()*100 << "% " << sn.Size() << '\n';
+      cout << '\n';
     }
-    // ga.PrintPopulation();
-    auto sn = ga.GetBestNetwork();
-    // sn.Print(); cout << '\n';
-    Test(sn, inputsize);
-    cout << max_gen << '\n';
-    cout << sn.Fitness()*100 << "%\n";
-    cout << '\n';
+    ga.Selection();
+    ga.Evaluate();
   }
+  // ga.PrintPopulation();
+  auto sn = ga.GetBestNetwork();
+  sn.Print(); cout << '\n';
+  Test(sn, inputsize);
+  // cout << sn.Fitness()*100 << "%\n";
+  // cout << '\n';
+  auto stop = chrono::high_resolution_clock::now();
+  auto duration = chrono::duration_cast<chrono::milliseconds>(stop-start);
+  cout << duration.count() << '\n';
 }
