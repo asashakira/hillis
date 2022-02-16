@@ -187,15 +187,19 @@ SortingNetwork Coevolution::GetBestNetwork() {
 
 SortingNetwork Coevolution::AllTimeBest() {
   vector<pair<pair<float,int>,int>> v(best.size());
-  for (int i = 0; i < (int)best.size(); i++)
-    v[i] = {{best[i].Test(), -best[i].Size()}, i};
+  for (int i = 0; i < (int)best.size(); i++) {
+    if (best[i].Accuracy() < 0) best[i].SetAccuracy(best[i].Test());
+    v[i] = {{best[i].Accuracy(), -best[i].Size()}, i};
+    // v[i] = {{best[i].Test(), -best[i].Size()}, i};
+  }
   sort(v.rbegin(), v.rend());
 
   auto ret = best[v[0].second];
 
   vector<SortingNetwork> new_best;
   for (int i = 0; i < (int)best.size(); i++)
-    if (v[i].first.first == 100) new_best.push_back(best[i]);
+    if (v[i].first.first == 100)
+      new_best.push_back(best[v[i].second]);
   swap(best, new_best);
 
   cout << best.size() << '\n';

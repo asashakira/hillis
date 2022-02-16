@@ -12,6 +12,7 @@ private:
   int input_size;
   int compare_size;
   int mutation_rate;
+  double accuracy=-1.0;
 public:
   SortingNetwork();
   SortingNetwork(int size, int inputsize, int mutation);
@@ -22,9 +23,11 @@ public:
   void Mutate();
   void Sort(vector<int> &v);
   int Size() { return compares.size(); }
+  double Accuracy() { return accuracy; }
   float Fitness() { return fitness; }
   void SetFitness(float f) { fitness = f; }
-  float Test();
+  void SetAccuracy(double a) { accuracy = a; }
+  double Test();
   void Printc1();
   void Printc2();
   void Print();

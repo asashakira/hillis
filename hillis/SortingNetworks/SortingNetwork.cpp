@@ -97,9 +97,9 @@ void SortingNetwork::Sort(vector<int> &t) {
   }
 }
 
-float SortingNetwork::Test() {
+double SortingNetwork::Test() {
   int n = input_size;
-  float count = 0;
+  double count = 0;
   for (int bit = 0; bit < (1 << n); bit++) {
     vector<int> a(n);
     for (int i = 0; i < n; i++)
@@ -109,7 +109,7 @@ float SortingNetwork::Test() {
     Sort(a);
     if (a == b) count++;
   }
-  return count / (1<<n) * 100;
+  return double(count / (1<<n) * 100);
 }
 
 void SortingNetwork::Printc1() { for (auto [a, b] : c1) cout << a << ',' << b << ' '; cout << '\n'; }
